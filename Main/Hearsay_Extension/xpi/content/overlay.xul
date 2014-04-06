@@ -1,0 +1,22 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="Hearsay_Extension/skin/overlay.css" type="text/css"?> 
+<!DOCTYPE overlay SYSTEM "Hearsay_Extension/locale/overlay.dtd"> 
+<overlay id="Hearsay_Extension-overlay" 
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
+<script type="application/x-javascript"
+  src="Hearsay_Extension/defaults/preferences/default.js"/>
+ 
+  <script src="hs_msgtypes.js"/>
+  <script src="hs_highlight.js"/>
+  <script src="hs_browsehandler.js"/>  
+  <script src="hs_message.js"/>
+  <script src="hs_keyboard.js"/>
+  <script src="hs_mouse.js"/>
+  <script type="application/x-javascript" src="speakGenerator.js" />  
+  <script src="hs_tts.js"/>
+  <script src="hs_transport.js"/>
+  <script src="hs_main.js"/>
+  
+
+</overlay> 
