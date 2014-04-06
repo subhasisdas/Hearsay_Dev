@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Node;
-
 import org.Hearsay_Server.interfaces.ICommunicatorListener;
 import org.Hearsay_Server.interfaces.IChannelListener;
 import org.Hearsay_Server.interfaces.IMessageChannel;
@@ -112,20 +111,11 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 		{
 		// Will be processed by active tab. if tabID of the message is the same. Otherwise ignore it
 		case KEY:		// Parameters: "press": a pressed key name. This message will be sent with active tab
-			//Sending TTS_SPEAK to extension
-			if(activeTab != null && (activeTab.getGlobalId() == globalTabId))
-			{
-				activeTab.onReceive(msg);
-			}
-			break;
+		
 		case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state.
-			if(activeTab != null && (activeTab.getGlobalId() == globalTabId))
-			{
-				activeTab.onReceive(msg);
-			}
-			break;
+		
 		case FOCUS:			// Parameters: "id" - new currently selected node by browser.
-			break;
+
 		case TTS_DONE:	// parameters: "text_id" - text with text_id has been spoken.
 			if(activeTab != null && activeTab.getGlobalId()==globalTabId)
 			{
@@ -185,17 +175,40 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			break;
 		case UPDATE_DOM:		// parameters: "parent_id" - id of the parent node of updated subtree, "sibling_id" - previous (or left) sibling of the updated subtree.
 			// 	payload - the serialized subtree. Note: subframes of the document will be sent as updates for subtree.
+			final ITabHandler updateTab = tabs.get(globalTabId);
+			if(updateTab != null){
+				updateTab.onReceive(msg);
+			}
+			break;
 		case DELETE_DOM:		// Parameters: "node_id" - list of root's id for deleted subtrees.
+			final ITabHandler deleteInTab = tabs.get(globalTabId);
+			if(deleteInTab != null){
+					deleteInTab.onReceive(msg);
+				}
+			break;
 		case MOVE_DOM:		// Parameters: "node_id", "parent_id", "sibling_id" - this event will be sent when "node_id" has been moved to a new position in "parent_id" and placed after "sibling_id".
+			final ITabHandler MoveDomInTab = tabs.get(globalTabId);
+			if(MoveDomInTab != null)	{
+					MoveDomInTab.onReceive(msg);
+				}
 		case UPDATE_ATTR:	// Parameters: "node_id", "attr", "value"
+			final ITabHandler updateAttrInTab = tabs.get(globalTabId);
+			if(updateAttrInTab != null){
+					updateAttrInTab.onReceive(msg);
+				}
+			break;
 		case DELETE_ATTR:	// Parameters: "node_id", "attr"
+			final ITabHandler DeleteAttrInTab = tabs.get(globalTabId);
+			if(DeleteAttrInTab != null)	{
+					DeleteAttrInTab.onReceive(msg);
+				}
+			break;
 		case CHANGE_VALUE:	// Parameters: "node_id", "value" - will be send when input form element has been changed
 			final ITabHandler tab = tabs.get(globalTabId);
 			if(tab == null)
 			{
 				log(1, "An invalid message was found based on a tab identifier : " + msg.tabId + " that does not exist");
 				return;
-
 			}
 			tab.onReceive(msg);
 			break;

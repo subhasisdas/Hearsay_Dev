@@ -3,17 +3,20 @@ package org.Hearsay_Server.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.Set;
-//import java.util.HashSet;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.Hearsay_Server.interfaces.IDomIterator;
 import org.Hearsay_Server.interfaces.IDomIterator;
 import org.Hearsay_Server.interfaces.IMessageChannel;
 import org.Hearsay_Server.interfaces.ITabHandler;
@@ -36,7 +39,7 @@ public class TabHandler implements ITabHandler
 	private boolean pauseMode = false;
 	/*moved from Message Channel interface*/
 	private int newTextId = 1;
-	//private ArrayList<Long> text_id_bucket = new ArrayList<Long>();
+	private ArrayList<Long> text_id_bucket = new ArrayList<Long>();
 
 	public TabHandler(long gId, long id, IMessageChannel ch)
 	{
@@ -61,7 +64,7 @@ public class TabHandler implements ITabHandler
 		if(element != null)
 		{
 			String nodeId = element.getAttribute(NODE_ID_ATTR);
-			nodeMap.put(Integer.parseInt(nodeId), (Node) element);
+			nodeMap.put(Integer.parseInt(nodeId), element);
 			NodeList nodeList = element.getChildNodes();
 			for(int index = 0; index < nodeList.getLength(); index++)
 			{
@@ -74,6 +77,221 @@ public class TabHandler implements ITabHandler
 			}
 		}
 	}
+	
+	private void process_Update_Attr(List<Integer> nodeIds, List<String> attr, List<String> values) throws Exception
+	{		
+		for(int i=0;i<nodeIds.size();i++)
+		{
+			Element current = (Element)getNodebyID(document.getFirstChild(),nodeIds.get(i).toString());
+			//System.out.println("i : "+i+"\t array length : "+attr.length+values.length);
+			//String attrVal="";
+			//if(values.length>i)
+			//	attrVal=values[i];
+			current.setAttribute(attr.get(i), values.get(i));
+			System.out.println(nodeIds.size()+attr.size()+values.size());
+			System.out.println(nodeIds.get(i)+" : "+attr.get(i));
+			System.out.println("changing : "+current.getAttribute("style"));
+
+			//System.out.println(nodeIds[i]+ " ^ " + getNodeId(iterator.getPos().getParentNode()));
+			if(nodeIds.get(i).toString().equals(getNodeId(iterator.getPos().getParentNode())+""))
+			{
+				//System.out.println("---------------------exact--------------------");
+				iterator.next();
+			}
+		}
+		
+	}
+	/*
+	private void process_Delete_Attr(Message msg) throws Exception
+	{
+	TODO : ask if 3 LOC has to be kept here or down	
+	}
+	*/
+	
+	private void process_Dom_Update(Node updateTree, String parentID, String siblingID) throws Exception
+	{
+
+    	document.importNode(updateTree, true);
+    	document.adoptNode(updateTree);	        	
+		Node appendedSubTree=appendSubTree(document.getFirstChild(), updateTree, parentID, siblingID);
+		
+		if(appendedSubTree!=null)
+		{				
+			updateNodeMap(document.getDocumentElement()); //if tree appended/updated successfully then call updateNodeMap
+			Element currentNode = (Element) updateTree;
+			//Node iteratorNode = getNodebyID(getNodebyID(document.getFirstChild(),currentNode.getAttribute("node_id")), getNodeId(iterator.getPos())+"");
+			if(findIfParent( nodeMap.get(Integer.parseInt(currentNode.getAttribute("node_id"))),iterator.getPos()))
+					iterator.next();
+					//process_iterator(iterator,iteratorNode);
+			
+		}
+	}
+	
+	private void process_Dom_Delete(List<Integer> listNodes) throws Exception
+	{
+		for(int i=0;i<listNodes.size();i++)
+		{
+			Node deletedNode=nodeMap.get(listNodes.get(i));//getNodebyID(document.getFirstChild(), listNodes[i]);
+			System.out.println(deletedNode);
+			if(deletedNode!=null)
+			{
+				if(findIfParent(deletedNode,iterator.getPos()))
+				{
+					iterator.next();
+				}
+				DeleteSubTree(document.getFirstChild(), listNodes.get(i));				
+			}
+		}
+	}
+	
+	private boolean findIfParent(Node parent, Node child) //change to PreDecessor !!
+	{
+		if(parent==null)
+			return false;
+		
+		while(child!=null) 
+		{
+			if(child == parent)
+				return true;
+			child=child.getParentNode();
+		}
+		return false;
+	}
+	
+	public Node getNodebyID(Node root,String id)
+	{
+		if(root.hasAttributes()) 
+		{	
+			Element e=(Element) (Node)root;
+			String currentID="-1";
+			if(e.getAttribute(NODE_ID_ATTR)!="") //to ensure if node_id exists
+				currentID = e.getAttribute(NODE_ID_ATTR); //get node_id of current id	
+			if(currentID.equals(id))
+				return root; // if the node_id matches, node is found. Return the node
+		}	
+		//if node not found/has no attributes, search its children recursively
+		NodeList childNodes = root.getChildNodes(); //get child nodes		
+		for(int i = 0; i < childNodes.getLength(); i++)
+		{
+			Node currentNextNode = getNodebyID(childNodes.item(i),id); //check for a node recursively, if its the node to be found
+			if(currentNextNode != null)
+				return currentNextNode; //return the node if found
+		}
+		return null; //return null if node not found
+	}
+	
+	public void DeleteSubTree(Node root,Integer node_id)
+	{
+		Node nodeToBeDeleted = nodeMap.get(node_id);//getNodebyID(root,node_id);		
+		if(nodeToBeDeleted!=null)
+		{
+			nodeToBeDeleted.getParentNode().removeChild(nodeToBeDeleted);
+			updateDeleteNodeMap((Element)root);
+		}				
+	}
+	
+	private void updateDeleteNodeMap(Element element)
+	{
+		if(element != null)
+		{
+			String nodeId = element.getAttribute(NODE_ID_ATTR);			
+			NodeList nodeList = element.getChildNodes();
+			for(int index = 0; index < nodeList.getLength(); index++)
+			{
+				Node currentNode = nodeList.item(index);
+				if (currentNode.getNodeType() == Node.ELEMENT_NODE)
+				{
+					Element currentElement = (Element) currentNode;
+					updateDeleteNodeMap(currentElement);
+				}
+			}
+			nodeMap.remove(Integer.parseInt(nodeId));
+		}
+	}
+	
+	private void process_Dom_Move(int parentIDm,String siblingIDm,String nodeIDm)
+	{
+		Node parentUpdated = nodeMap.get(parentIDm);
+    	Node siblingToBe = getNodebyID(parentUpdated,siblingIDm);
+    	Node movedDom = nodeMap.get(Integer.parseInt(nodeIDm));
+    	if((siblingToBe==null || siblingIDm.isEmpty()) && movedDom!=null )
+    		parentUpdated.appendChild(movedDom);
+    	else if(movedDom!=null)
+    		parentUpdated.insertBefore(movedDom, siblingToBe);
+    	
+		
+	}
+	
+	private void process_iterator(IDomIterator iterator, Node iteratorNode) throws Exception
+	{
+		if(iteratorNode!=null)
+		{
+			//iterator.setPos(iterator.getPos().getParentNode().getFirstChild());
+			try { iterator.next(); } catch(Exception e){}
+			{
+				String nodeValueToSendPI = null;
+				if(iterator.getPos().getNodeName().equals("textelement"))
+				{								
+					nodeValueToSendPI = iterator.getPos().getTextContent();
+				}
+				else
+				{
+					boolean nextNodeExists = iterator.next();
+					if(nextNodeExists)
+					{
+						nodeValueToSendPI = iterator.getPos().getTextContent();
+					}					
+				}
+				if(nodeValueToSendPI != null)
+				{
+					try{speak(nodeValueToSendPI);hightLight(getNodeId(iterator.getPos()));} catch(Exception e){}					
+					//speakAndHighlightNode(nodeValueToSend);
+				}
+				
+			}
+		}
+	}
+	
+	public Node appendSubTree(Node root, Node updateTree, String parentID,String leftID)
+	{
+		Node parent = nodeMap.get(Integer.parseInt(parentID));//getNodebyID(root,parentID); //finding the parent node of child to be updated / appended
+		if(parent==null) 
+			return null; //if parent not found then return null
+		NamedNodeMap at = updateTree.getAttributes(); //get attributes(node_id) of root updated tree 		
+		/* Logic to update(replace) subtree if it already exists */
+		if(at!=null)
+		{
+			String id = at.getNamedItem(NODE_ID_ATTR).getTextContent(); //get the value of node_id			
+			Node updateNode=getNodebyID(root,id); //check if the updateTree node already exists
+			
+			if(updateNode!=null && updateNode.getParentNode()==parent) //if node already exists, replace the node subtree
+			{
+				updateNode.getParentNode().replaceChild(updateTree, updateNode); //replace old tree with new tree
+				return updateTree; //return root of updated subtree
+			}
+		}
+		else		
+			return null; //return null as no valid node_id for updated tree
+		/* Logic to insert subtree if subtree doesn't exist */
+		if(leftID.isEmpty()) // special case where we want to insert new node as the first child(as it has no left sibling)
+		{
+			parent.insertBefore(updateTree, parent.getFirstChild()); //inserting before 1st child of parent
+			return updateTree; 
+		}
+		//if not the first node; find the sibling and append after that
+		else
+		{
+			Node prevSibling=getNodebyID(parent,leftID); //find the location of previous sibling specified			
+			if(prevSibling!=null && prevSibling.getParentNode()==parent) //inserting after the specified sibling
+			{
+				parent.insertBefore(updateTree, prevSibling.getNextSibling());
+				return updateTree;
+			}
+			else
+				return null;
+		}		
+	}
+
 
 
 
@@ -99,19 +317,50 @@ public class TabHandler implements ITabHandler
 		case UPDATE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
 			// if it is, then update iterator
+			Node updateTree = msg.payload;
+	    	String parentID = msg.getArguments().get("parent_id").get(0);
+	    	String siblingID = msg.getArguments().get("sibling_id").get(0);	    	
+			process_Dom_Update(updateTree,parentID,siblingID);
 			break;
 		case DELETE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
 			// update iterator
+			List<String> listNodesStr = msg.getArguments().get("node_ids");
+			System.out.println(listNodesStr);
+			List<Integer> listNodes = new ArrayList();
+			for(int i=0;i<listNodesStr.size();i++)
+				listNodes.add(Integer.parseInt(listNodesStr.get(i)));
+			process_Dom_Delete(listNodes);		
 			break;
 		case MOVE_DOM:
 			// TODO: update Docunent.
+			int parentIDm = Integer.parseInt(msg.getArguments().get("parent_id").get(0));
+	    	String siblingIDm = msg.getArguments().get("sibling_id").get(0);
+	    	String nodeIDm = msg.getArguments().get("node_id").get(0);
+	    	process_Dom_Move(parentIDm, siblingIDm, nodeIDm);
 			break;
 		case UPDATE_ATTR:
-			// TODO: update Docunent.
+			// TODO: update Docunent.			
+			List<String> nodeIdsString = msg.getArguments().get("node_id");
+			List<String> attr = msg.getArguments().get("attr");
+			List<String> values = msg.getArguments().get("values");
+			List<Integer> nodeIds = new ArrayList();
+			for(int i=0;i<nodeIdsString.size();i++)
+				nodeIds.add(Integer.parseInt(nodeIdsString.get(i)));			
+			process_Update_Attr(nodeIds,attr,values);
 			break;
 		case DELETE_ATTR:
 			// TODO: update Docunent.
+			List<String> nodeIdsStri = msg.getArguments().get("node_id");
+			List<String> Attr = msg.getArguments().get("attr");
+			List<Integer> nodeInt = new ArrayList();
+			for(int i=0;i<nodeIdsStri.size();i++)
+				nodeInt.add(Integer.parseInt(nodeIdsStri.get(i)));
+			for(int i=0;i<nodeInt.size();i++){
+				Element current = (Element)nodeMap.get(nodeInt.get(i));//getNodebyID(document.getFirstChild(),nodeInt.get(i));
+				current.removeAttribute(Attr.get(i));			
+			}
+			//process_Delete_Attr(msg);
 			break;
 		case CHANGE_VALUE:
 			// TODO: update Docunent. if iterator points to this input element,
@@ -123,13 +372,8 @@ public class TabHandler implements ITabHandler
 			/**
 			 * TTS_DONE
 			 */
-		case ACTIVE_TAB:
-			break;
-		case DELETE_TAB:
-			break;
+		
 		case FOCUS:
-			break;
-		case NEW_TAB:
 			break;
 		case SET_HIGHLIGHT:
 			break;
@@ -297,7 +541,7 @@ public class TabHandler implements ITabHandler
 			//Recursively traverse the document and update the nodeMap
 			Element documentElement = document.getDocumentElement();
 			updateNodeMap(documentElement);
-			iterator = new DomIterator(this);
+			iterator = new NewDomIterator(this);
 			for(;iterator.getPos() != null;)
 			{
 				System.out.println(getNodeId(iterator.getPos())+">>> "+ iterator.getPos().getTextContent());
@@ -401,7 +645,7 @@ public class TabHandler implements ITabHandler
 					speak(nodeValueToSend);
 					System.out.println("highlighting");
 					hightLight(node_Id);
-					//System.out.println("Highlight Message sent on KEY PAUSE"); 
+					System.out.println("Highlight Message sent on KEY PAUSE"); 
 				}
 			}
 		}
@@ -458,10 +702,17 @@ public class TabHandler implements ITabHandler
 			if(iterator.next())
 			{
 				String ttsDoneNodeValueToSend = iterator.getPos().getTextContent();
-				speak(ttsDoneNodeValueToSend);
-				hightLight(0);
-				System.out.println("Highlight Message sent on TTS_DONE"); 
+				if(ttsDoneNodeValueToSend == null || ttsDoneNodeValueToSend.equals(null)){
+					System.out.println("NULL TABHANDLER FLAG");
+				}
+				else if(ttsDoneNodeValueToSend != null || !ttsDoneNodeValueToSend.equals(null))
+				{
+					speak(ttsDoneNodeValueToSend);
+					hightLight(0);
+					System.out.println("Highlight Message sent on TTS_DONE"); 
+				}
 			}
 		}
 	}
 }
+
