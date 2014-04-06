@@ -4,6 +4,7 @@ package org.Hearsay_Server.server;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 
 import org.Hearsay_Server.interfaces.IDomIterator;
 import org.Hearsay_Server.interfaces.ITabHandler;
@@ -11,8 +12,8 @@ import org.Hearsay_Server.interfaces.ITabHandler;
 
 public class DomIterator implements IDomIterator 
 {
-	final private ITabHandler tab;
-	private Node node;
+	final protected ITabHandler tab;
+	protected Node node;
 
 	public DomIterator(ITabHandler t)
 	{
@@ -24,7 +25,7 @@ public class DomIterator implements IDomIterator
 	 * Find the first text node if one exists within the given root node's subtree
 	 * @param rootNode
 	 */
-	private Node findTextNodeInSubtree(Node rootNode)
+	protected Node findTextNodeInSubtree(Node rootNode)
 	{
 		if(rootNode.getNodeName().equals("textelement"))
 			return rootNode;
@@ -170,7 +171,7 @@ public class DomIterator implements IDomIterator
 		//We are now at the last node
 	}
 
-	private Node findTextNodeInSiblings(final Node searchNode)
+	protected Node findTextNodeInSiblings(final Node searchNode)
 	{
 		Node currentNode = searchNode.getNextSibling();
 		while(currentNode != null)
