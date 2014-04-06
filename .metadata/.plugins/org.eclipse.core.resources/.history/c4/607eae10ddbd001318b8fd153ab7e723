@@ -1,0 +1,111 @@
+package org.Hearsay_Server.server;
+//package interfaces;
+
+//import interfaces.ICommunicatorListener;
+
+import org.Hearsay_Server.interfaces.ICommunicatorListener;
+
+//import java.io.BufferedReader;
+import java.io.IOException;
+//import java.io.InputStreamReader;
+//import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.lang.Runnable;
+
+/**
+ * This is the basic communication class which is used to render to the incoming
+ * browser client connections. This is a singleton class and cannot be
+ * instantiated but the singleton instance can be obtained.
+ * 
+ * @author Subhasis Das
+ * 
+ */
+
+public class Communicator extends Loggable implements Runnable
+{
+	private ServerSocket server=null;
+	private Thread threadClient= null;
+	private final int port;
+	private final ICommunicatorListener listener;
+
+	//Constructor
+	public Communicator(ICommunicatorListener l, int p) 
+	{
+		listener = l;
+		port = p;
+	}
+
+	/**
+	 * Run method for this thread which blocks on the accept call of the server
+	 * and spawns new threads for every connection.
+	 */
+	@Override
+	public void run() {
+		try {
+			while (true) {                	                	
+				/**
+				 * This is a blocking call which would unblock as soon as a
+				 * client connects to it.
+				 */
+
+				// use loggable for this to mask output
+				//sdas: done
+
+				SetLogLevel(0);SetLinePrefix("[Communicator] :");
+				log(1,this.getClass().getSimpleName()+" : accepting");
+
+				Socket clientSocket = server.accept();
+				log("Accepted a connection from client at port number : " + clientSocket.getPort());
+				log(1,this.getClass().getSimpleName()+"accepted");
+
+				//Communication Listener
+				listener.onConnect(this, clientSocket);
+			}
+		}
+		catch (Exception e) {
+			/**
+			 * Thrown when a socket.close() is called when the socket is
+			 * blocked in the accept call.
+			 */
+			log(0, e.getMessage());
+			e.printStackTrace();
+			log(0,"Communicator aux thread is about stop");               
+		}
+	}
+
+	/**
+	 * This function starts the communicator socket if it was previously
+	 * shutdown.
+	 * @throws Exception 
+	 */
+	public synchronized void  start() throws Exception {
+		if (server == null) {
+			server = new ServerSocket(port);
+			log(1,"creating thread");
+			threadClient = new Thread(this);
+			threadClient.start();
+			log(1,"Communicator Socket is UP and Running!");
+		} else
+			log(1,"Communicator Socket is already Running!");
+
+	}
+
+	/**
+	 * This function stops the communicator socket.
+	 * @throws IOException 
+	 * @throws InterruptedException 
+	 */
+	public synchronized void stop() throws IOException, InterruptedException 
+	{
+		log(1,"Communicator Stopped");
+		server.close();
+		server = null;
+		threadClient.join();
+	}
+
+
+}
+
+
+

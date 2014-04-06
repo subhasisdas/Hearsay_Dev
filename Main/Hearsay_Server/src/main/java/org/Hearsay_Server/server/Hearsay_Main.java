@@ -27,8 +27,7 @@ public class Hearsay_Main
 
 		//comm.run();
 		System.out.println("Comm.start");
-		System.out.println("hello");
-		
+			
 		comm.start();
 		
 		System.out.println("Comm.started");
@@ -40,9 +39,8 @@ public class Hearsay_Main
 			if(s.isEmpty())
 				break;
 		}
-		System.out.println("Stopping comm!");
 		comm.stop();
 		dispatcher.release();		
-		System.out.println("Zed is dead");
+		System.out.println("Unexpected Error : Zed is dead");
 	}
 }

@@ -35,17 +35,14 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	@Override
 	public synchronized void onConnect(Communicator source, Socket socket) 
 	{
-		System.out.println("Dispatcher onConnect");
+		log(1,"Dispatcher onConnect");
 		try 
 		{
-			System.out.println("flag1");
 			IMessageChannel channel = new MessageChannel(socket, this);
-			System.out.println("flag2");			
 			channel = channels.put(channel.getId(), channel);
-			System.out.println("flag3");
+
 			if(channel!=null)	// previous channel with the same port? a little strange but...
 			{
-				System.out.println("flag4");
 				channel.release();
 			}
 		}
@@ -58,7 +55,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 
 	public void release()
 	{
-		System.out.println("Release was invoked");
+		log(1,"Release was invoked");
 		for(ITabHandler tabHandler : tabs.values())
 		{
 			tabHandler.release();
@@ -74,7 +71,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	@Override
 	public synchronized void onDisconnect(IMessageChannel sp) 
 	{
-		System.out.println("onDisconnect was invoked");
+		log(1,"onDisconnect was invoked");
 		channels.remove(sp.getId());
 		//Prepare the list of tabs that must be removed
 		List<Long> tabsToRemove = new ArrayList<Long>();
@@ -101,28 +98,25 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	@Override
 	public synchronized void onReceive(IMessageChannel sp, Message msg) throws Exception
 	{
-		//sdas
-		//System.out.println("The mesasge that has been received by dispatcher is : " + msg.writeXML());
-		//System.out.println("Current state of tabs is : " + tabs.toString());
 		// re-build msg id:
-		System.out.println("Dispatcher OnReceive");
+		log(1,"Dispatcher OnReceive");
 		final long globalTabId = msg.tabId*100000+sp.getId();
 		switch(msg.type)
 		{
 		// Will be processed by active tab. if tabID of the message is the same. Otherwise ignore it
 		case KEY:		// Parameters: "press": a pressed key name. This message will be sent with active tab
-		
+
 		case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state.
-		
+
 		case FOCUS:			// Parameters: "id" - new currently selected node by browser.
 
 		case TTS_DONE:	// parameters: "text_id" - text with text_id has been spoken.
 			if(activeTab != null && activeTab.getGlobalId()==globalTabId)
 			{
-				//System.out.println("Active tab is being delivered a TTS_DONE message");
+				//log(1,"Active tab is being delivered a TTS_DONE message");
 				activeTab.onReceive(msg);
 			}
-			//System.out.println("Global tab Id : " + globalTabId + " : " + activeTab.getId());
+			//log(1,"Global tab Id : " + globalTabId + " : " + activeTab.getId());
 			break;
 			// Browser handler events. Will be produced by main part of the extension.
 			// Will be processed by Dispatcher
@@ -183,25 +177,25 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 		case DELETE_DOM:		// Parameters: "node_id" - list of root's id for deleted subtrees.
 			final ITabHandler deleteInTab = tabs.get(globalTabId);
 			if(deleteInTab != null){
-					deleteInTab.onReceive(msg);
-				}
+				deleteInTab.onReceive(msg);
+			}
 			break;
 		case MOVE_DOM:		// Parameters: "node_id", "parent_id", "sibling_id" - this event will be sent when "node_id" has been moved to a new position in "parent_id" and placed after "sibling_id".
 			final ITabHandler MoveDomInTab = tabs.get(globalTabId);
 			if(MoveDomInTab != null)	{
-					MoveDomInTab.onReceive(msg);
-				}
+				MoveDomInTab.onReceive(msg);
+			}
 		case UPDATE_ATTR:	// Parameters: "node_id", "attr", "value"
 			final ITabHandler updateAttrInTab = tabs.get(globalTabId);
 			if(updateAttrInTab != null){
-					updateAttrInTab.onReceive(msg);
-				}
+				updateAttrInTab.onReceive(msg);
+			}
 			break;
 		case DELETE_ATTR:	// Parameters: "node_id", "attr"
 			final ITabHandler DeleteAttrInTab = tabs.get(globalTabId);
 			if(DeleteAttrInTab != null)	{
-					DeleteAttrInTab.onReceive(msg);
-				}
+				DeleteAttrInTab.onReceive(msg);
+			}
 			break;
 		case CHANGE_VALUE:	// Parameters: "node_id", "value" - will be send when input form element has been changed
 			final ITabHandler tab = tabs.get(globalTabId);
@@ -212,14 +206,8 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			}
 			tab.onReceive(msg);
 			break;
-		case SET_HIGHLIGHT:
-			break;
-		case TTS_CANCEL:
-			break;
-		case TTS_SPEAK:
-			break;
 		default:
-			System.out.println("Got a default msg");
+			log(0,"Got a default msg");
 			break;
 
 		}

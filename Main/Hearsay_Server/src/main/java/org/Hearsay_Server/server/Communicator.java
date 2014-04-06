@@ -53,11 +53,10 @@ public class Communicator extends Loggable implements Runnable
 				//sdas: done
 
 				SetLogLevel(0);SetLinePrefix("[Communicator] :");
-				log(1,this.getClass().getSimpleName()+" : accepting");
+				log(0,this.getClass().getSimpleName()+" : accepting");
 
 				Socket clientSocket = server.accept();
-				System.out.println("Accepting...");
-				System.out.println("Accepted a connection from client at port number : " + clientSocket.getPort());
+				log(0,"Accepted a connection from client at port number : " + clientSocket.getPort());
 				log(1,this.getClass().getSimpleName()+"accepted");
 
 				//Communication Listener

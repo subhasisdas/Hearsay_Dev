@@ -45,7 +45,7 @@ public class MessageChannel extends Loggable implements IMessageChannel
 					for(;;)  
 					{
 						final String message = receiveMessage();
-						//System.out.println("Received message : " + message);
+						//log(1,"Received message : " + message);
 						if(message == null)
 							break;
 	
@@ -53,14 +53,14 @@ public class MessageChannel extends Loggable implements IMessageChannel
 						{	// message not read yet
 							log(1, " : Message Receive() works : message :"/*+message*/);	
 							//listener.onReceive
-								//System.out.println("Received message for parsing : " + message);
+								//log(1,"Received message for parsing : " + message);
 								listener.onReceive(MessageChannel.this, Message.parseXML(message));
 						}
 					}
 				} 
 				catch (Exception e) 
 				{
-					System.out.println("An error was encountered when parsing the message received from extension : " + e.getLocalizedMessage());
+					log(0,"An error was encountered when parsing the message received from extension : " + e.getLocalizedMessage());
 					e.printStackTrace();
 					log(1, "An error was encountered when parsing the message received from extension : " + e.getMessage());
 				}
@@ -78,18 +78,18 @@ public class MessageChannel extends Loggable implements IMessageChannel
 		try
 		{
 		final String smsg = msg.writeXML();
-		//System.out.println("Sending Message : " + smsg);
+		//log(1,"Sending Message : " + smsg);
 		final byte[] msgb = smsg.getBytes("UTF-8");
 		String msg_len = String.valueOf(msgb.length);
 		msg_len = "00000000".substring(msg_len.length())+msg_len;
-		//System.out.println("Message length : " + msg_len + "::" + msgb.toString());
+		//log(1,"Message length : " + msg_len + "::" + msgb.toString());
 		final byte[] msg_lenb = msg_len.getBytes("UTF-8");
 		socket.getOutputStream().write(msg_lenb);
 		socket.getOutputStream().write(msgb);
 		}
 		catch(Exception e)
 		{
-			System.out.println("Sending error: " + e);
+			log(0,"Sending error: " + e);
 		}
 	}
 	//TODO: DELETE AFTER TESTING
