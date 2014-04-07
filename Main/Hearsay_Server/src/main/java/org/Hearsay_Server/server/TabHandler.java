@@ -38,7 +38,7 @@ public class TabHandler extends Loggable implements ITabHandler
 	private boolean initializedAtleastOnce = false;
 	private boolean pauseMode = false;
 	/*moved from Message Channel interface*/
-	private int newTextId = 1;
+	private long newTextId = 1;
 
 	public TabHandler(long gId, long id, IMessageChannel ch)
 	{
@@ -434,13 +434,35 @@ public class TabHandler extends Loggable implements ITabHandler
 			return;
 		active = false;
 		// TODO: cancel speaking
+		try {
+			cancel(newTextId);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
+	/**
+	 * 	cancels the current Text_id.
+	 * 	@param String This attribute stores the text_id
+	 *  @return void
+	 *  @throws Exception 
+	 */
+	public void cancel(long text_id) throws Exception{
+		Message ttsCancelMessage = new Message(MessageType.TTS_CANCEL, tabId);
+		ArrayList<String> textIdParameter = new ArrayList<String>();
+		textIdParameter.add(Long.toString(text_id));
+		ttsCancelMessage.getArguments().put("text_id", textIdParameter);
+		log(0,"TTS Cancel sent for "+text_id);
+		channel.send(ttsCancelMessage);		
+	}
+	
 	@Override
 	public synchronized int getNextTextId()
 	{
-		int nextTextId = newTextId;
-		newTextId++;
+		int nextTextId = 0; 
+		/*nextTextId = newTextId;
+		newTextId++;*/
 		return nextTextId;
 	}
 
@@ -458,6 +480,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		ArrayList<String> textIdParameter = new ArrayList<String>();
 		//log(1,"Text Id :"+Long.toString(globalId));
 		Long text_Id = base+(2*(++offset));
+		newTextId = text_Id;
 		textIdParameter.add(Long.toString(text_Id));
 		ttsSpeakMessage.getArguments().put("text", textParameter);
 		ttsSpeakMessage.getArguments().put("text_id", textIdParameter);

@@ -26,11 +26,11 @@ public class Hearsay_Main
 		final Communicator comm = new Communicator(dispatcher, ServerPort);
 
 		//comm.run();
-		System.out.println("Comm.start");
+		System.out.println("[Main] : Comm.start");
 			
 		comm.start();
 		
-		System.out.println("Comm.started");
+		System.out.println("[Main] : Comm.started");
 
 		final BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
 		for(;;)
@@ -41,6 +41,6 @@ public class Hearsay_Main
 		}
 		comm.stop();
 		dispatcher.release();		
-		System.out.println("Unexpected Error : Zed is dead");
+		System.out.println("[Main] : Unexpected Error : Zed is dead");
 	}
 }

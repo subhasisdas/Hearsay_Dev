@@ -4,6 +4,11 @@
 	</section>
 	<section name="JavaElementSearchActions">
 	</section>
+	<section name="JavaSearchPage">
+		<item value="false" key="CASE_SENSITIVE"/>
+		<item value="11" key="INCLUDE_MASK"/>
+		<item value="0" key="HISTORY_SIZE"/>
+	</section>
 	<section name="quick_assist_proposal_size">
 	</section>
 	<section name="org.eclipse.jdt.internal.ui.text.QuickOutline">
