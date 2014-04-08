@@ -120,7 +120,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		for(int i=0;i<listNodes.size();i++)
 		{
 			Node deletedNode=nodeMap.get(listNodes.get(i));//getNodebyID(document.getFirstChild(), listNodes[i]);
-			
+			System.out.println(deletedNode);
 			if(deletedNode!=null)
 			{
 				if(findIfPreDecessor(deletedNode,iterator.getPos()))
@@ -655,7 +655,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		String ele = newPosition.getTextContent();
 		String nodeValueToSend = null;
 		if(ele.isEmpty() || ele == "" || ele==null)
-			log(1,"No node for "+nodeClickedId);
+			System.out.println("No node for "+nodeClickedId);
 		else/*(newPosition != null)*/
 		{
 			boolean positionUpdated = iterator.setPos(newPosition);
