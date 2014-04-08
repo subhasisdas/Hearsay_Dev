@@ -21,7 +21,7 @@ import org.Hearsay_Server.interfaces.IDomIterator;
 import org.Hearsay_Server.interfaces.IMessageChannel;
 import org.Hearsay_Server.interfaces.ITabHandler;
 
-public class TabHandler extends Loggable implements ITabHandler
+public class TabHandler implements ITabHandler
 {
 	public static final String NODE_ID_ATTR = "node_id";
 
@@ -38,7 +38,8 @@ public class TabHandler extends Loggable implements ITabHandler
 	private boolean initializedAtleastOnce = false;
 	private boolean pauseMode = false;
 	/*moved from Message Channel interface*/
-	private long newTextId = 1;
+	private int newTextId = 1;
+	private ArrayList<Long> text_id_bucket = new ArrayList<Long>();
 
 	public TabHandler(long gId, long id, IMessageChannel ch)
 	{
@@ -76,65 +77,58 @@ public class TabHandler extends Loggable implements ITabHandler
 			}
 		}
 	}
-
+	
 	private void process_Update_Attr(List<Integer> nodeIds, List<String> attr, List<String> values) throws Exception
 	{		
 		for(int i=0;i<nodeIds.size();i++)
 		{
 			Element current = (Element)getNodebyID(document.getFirstChild(),nodeIds.get(i).toString());
-			//log(1,"i : "+i+"\t array length : "+attr.length+values.length);
-			//String attrVal="";
-			//if(values.length>i)
-			//	attrVal=values[i];
 			current.setAttribute(attr.get(i), values.get(i));
-			log(1,Integer.toString(nodeIds.size()+attr.size()+values.size()));
-			log(1,nodeIds.get(i)+" : "+attr.get(i));
-			log(1,"changing : "+current.getAttribute("style"));
-
-			//log(1,nodeIds[i]+ " ^ " + getNodeId(iterator.getPos().getParentNode()));
-			if(nodeIds.get(i).toString().equals(getNodeId(iterator.getPos().getParentNode())+""))
+			
+			//check if iterator is not null and the node attr being changed is inside the sub-tree
+			if(iterator.getPos()!=null && findIfPreDecessor(nodeMap.get(nodeIds.get(i)), iterator.getPos()))
 			{
-				//log(1,"---------------------exact--------------------");
+				//case when updated attribute is being spoken; move to next element
 				iterator.next();
 			}
 		}
-
+		
 	}
 	/*
 	private void process_Delete_Attr(Message msg) throws Exception
 	{
 	TODO : ask if 3 LOC has to be kept here or down	
 	}
-	 */
-
+	*/
+	
 	private void process_Dom_Update(Node updateTree, String parentID, String siblingID) throws Exception
 	{
 
-		document.importNode(updateTree, true);
-		document.adoptNode(updateTree);	        	
+    	document.importNode(updateTree, true);
+    	document.adoptNode(updateTree);	        	
 		Node appendedSubTree=appendSubTree(document.getFirstChild(), updateTree, parentID, siblingID);
-
+		
 		if(appendedSubTree!=null)
 		{				
 			updateNodeMap(document.getDocumentElement()); //if tree appended/updated successfully then call updateNodeMap
 			Element currentNode = (Element) updateTree;
 			//Node iteratorNode = getNodebyID(getNodebyID(document.getFirstChild(),currentNode.getAttribute("node_id")), getNodeId(iterator.getPos())+"");
-			if(findIfParent( nodeMap.get(Integer.parseInt(currentNode.getAttribute("node_id"))),iterator.getPos()))
-				iterator.next();
-			//process_iterator(iterator,iteratorNode);
-
+			if(findIfPreDecessor( nodeMap.get(Integer.parseInt(currentNode.getAttribute("node_id"))),iterator.getPos()))
+					iterator.next();
+					//process_iterator(iterator,iteratorNode);
+			
 		}
 	}
-
+	
 	private void process_Dom_Delete(List<Integer> listNodes) throws Exception
 	{
 		for(int i=0;i<listNodes.size();i++)
 		{
 			Node deletedNode=nodeMap.get(listNodes.get(i));//getNodebyID(document.getFirstChild(), listNodes[i]);
-			log(1,deletedNode.toString());
+			System.out.println(deletedNode);
 			if(deletedNode!=null)
 			{
-				if(findIfParent(deletedNode,iterator.getPos()))
+				if(findIfPreDecessor(deletedNode,iterator.getPos()))
 				{
 					iterator.next();
 				}
@@ -142,12 +136,12 @@ public class TabHandler extends Loggable implements ITabHandler
 			}
 		}
 	}
-
-	private boolean findIfParent(Node parent, Node child) //change to PreDecessor !!
+	
+	private boolean findIfPreDecessor(Node parent, Node child) //change to PreDecessor !!
 	{
 		if(parent==null)
 			return false;
-
+		
 		while(child!=null) 
 		{
 			if(child == parent)
@@ -156,7 +150,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		}
 		return false;
 	}
-
+	
 	public Node getNodebyID(Node root,String id)
 	{
 		if(root.hasAttributes()) 
@@ -178,7 +172,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		}
 		return null; //return null if node not found
 	}
-
+	
 	public void DeleteSubTree(Node root,Integer node_id)
 	{
 		Node nodeToBeDeleted = nodeMap.get(node_id);//getNodebyID(root,node_id);		
@@ -188,7 +182,7 @@ public class TabHandler extends Loggable implements ITabHandler
 			updateDeleteNodeMap((Element)root);
 		}				
 	}
-
+	
 	private void updateDeleteNodeMap(Element element)
 	{
 		if(element != null)
@@ -207,20 +201,26 @@ public class TabHandler extends Loggable implements ITabHandler
 			nodeMap.remove(Integer.parseInt(nodeId));
 		}
 	}
-
+	
 	private void process_Dom_Move(int parentIDm,String siblingIDm,String nodeIDm)
 	{
 		Node parentUpdated = nodeMap.get(parentIDm);
-		Node siblingToBe = getNodebyID(parentUpdated,siblingIDm);
-		Node movedDom = nodeMap.get(Integer.parseInt(nodeIDm));
-		if((siblingToBe==null || siblingIDm.isEmpty()) && movedDom!=null )
-			parentUpdated.appendChild(movedDom);
-		else if(movedDom!=null)
-			parentUpdated.insertBefore(movedDom, siblingToBe);
-
-
+    	Node siblingToBe = getNodebyID(parentUpdated,siblingIDm);
+    	Node movedDom = nodeMap.get(Integer.parseInt(nodeIDm));
+    	if((siblingToBe==null || siblingIDm.isEmpty()) && movedDom!=null )
+    		parentUpdated.appendChild(movedDom);
+    	else if(movedDom!=null)
+    		parentUpdated.insertBefore(movedDom, siblingToBe);	
 	}
-
+	
+	public List<Integer> convertToIntegerList(List<String> listStr)
+	{
+		List<Integer> listNodes = new ArrayList();
+		for(int i=0;i<listStr.size();i++)
+			listNodes.add(Integer.parseInt(listStr.get(i)));
+		return listNodes;
+	}
+	
 	private void process_iterator(IDomIterator iterator, Node iteratorNode) throws Exception
 	{
 		if(iteratorNode!=null)
@@ -246,11 +246,11 @@ public class TabHandler extends Loggable implements ITabHandler
 					try{speak(nodeValueToSendPI);hightLight(getNodeId(iterator.getPos()));} catch(Exception e){}					
 					//speakAndHighlightNode(nodeValueToSend);
 				}
-
+				
 			}
 		}
 	}
-
+	
 	public Node appendSubTree(Node root, Node updateTree, String parentID,String leftID)
 	{
 		Node parent = nodeMap.get(Integer.parseInt(parentID));//getNodebyID(root,parentID); //finding the parent node of child to be updated / appended
@@ -262,7 +262,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		{
 			String id = at.getNamedItem(NODE_ID_ATTR).getTextContent(); //get the value of node_id			
 			Node updateNode=getNodebyID(root,id); //check if the updateTree node already exists
-
+			
 			if(updateNode!=null && updateNode.getParentNode()==parent) //if node already exists, replace the node subtree
 			{
 				updateNode.getParentNode().replaceChild(updateTree, updateNode); //replace old tree with new tree
@@ -298,7 +298,7 @@ public class TabHandler extends Loggable implements ITabHandler
 	public synchronized void onReceive(Message msg) throws Exception
 	{
 		// TODO: process all messages, related to tab (see msg types)
-		log(1,"Tabhandler Onreceive");
+		System.out.println("Tabhandler Onreceive");
 		switch(msg.type)
 		{
 		case INIT_DOM:
@@ -306,55 +306,51 @@ public class TabHandler extends Loggable implements ITabHandler
 			processINIT_DOM(payload);
 			break;
 		case KEY:
-			log(1,"Key press event");
+			System.out.println("Key press event");
 			processKeyPress(msg);
 			break;
 		case MOUSE:
-			log(1,"MOUSE EVENT");
+			System.out.println("MOUSE EVENT");
 			processMouseEvent(msg);
 			break;
 		case UPDATE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
 			// if it is, then update iterator
 			Node updateTree = msg.payload;
-			String parentID = msg.getArguments().get("parent_id").get(0);
-			String siblingID = msg.getArguments().get("sibling_id").get(0);	    	
+			//NOTE TO ASK : Types have been kept as String bcoz sometimes siblindID = ""; parseInt will fail in valid cases causing exception
+	    	String parentID = msg.getArguments().get("parent_id").get(0);
+	    	String siblingID = msg.getArguments().get("sibling_id").get(0);	    	
 			process_Dom_Update(updateTree,parentID,siblingID);
 			break;
 		case DELETE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
 			// update iterator
 			List<String> listNodesStr = msg.getArguments().get("node_ids");
-			log(1,listNodesStr.toString());
-			List<Integer> listNodes = new ArrayList();
-			for(int i=0;i<listNodesStr.size();i++)
-				listNodes.add(Integer.parseInt(listNodesStr.get(i)));
+			List<Integer> listNodes = convertToIntegerList(listNodesStr);
 			process_Dom_Delete(listNodes);		
 			break;
 		case MOVE_DOM:
 			// TODO: update Docunent.
 			int parentIDm = Integer.parseInt(msg.getArguments().get("parent_id").get(0));
-			String siblingIDm = msg.getArguments().get("sibling_id").get(0);
-			String nodeIDm = msg.getArguments().get("node_id").get(0);
-			process_Dom_Move(parentIDm, siblingIDm, nodeIDm);
+	    	String siblingIDm = msg.getArguments().get("sibling_id").get(0);
+	    	String nodeIDm = msg.getArguments().get("node_id").get(0);
+	    	process_Dom_Move(parentIDm, siblingIDm, nodeIDm);
 			break;
 		case UPDATE_ATTR:
 			// TODO: update Docunent.			
 			List<String> nodeIdsString = msg.getArguments().get("node_id");
 			List<String> attr = msg.getArguments().get("attr");
 			List<String> values = msg.getArguments().get("values");
-			List<Integer> nodeIds = new ArrayList();
-			for(int i=0;i<nodeIdsString.size();i++)
-				nodeIds.add(Integer.parseInt(nodeIdsString.get(i)));			
+			List<Integer> nodeIds = convertToIntegerList(nodeIdsString);
+					
 			process_Update_Attr(nodeIds,attr,values);
 			break;
 		case DELETE_ATTR:
 			// TODO: update Docunent.
 			List<String> nodeIdsStri = msg.getArguments().get("node_id");
 			List<String> Attr = msg.getArguments().get("attr");
-			List<Integer> nodeInt = new ArrayList();
-			for(int i=0;i<nodeIdsStri.size();i++)
-				nodeInt.add(Integer.parseInt(nodeIdsStri.get(i)));
+			List<Integer> nodeInt = convertToIntegerList(nodeIdsStri);
+			
 			for(int i=0;i<nodeInt.size();i++){
 				Element current = (Element)nodeMap.get(nodeInt.get(i));//getNodebyID(document.getFirstChild(),nodeInt.get(i));
 				current.removeAttribute(Attr.get(i));			
@@ -371,11 +367,16 @@ public class TabHandler extends Loggable implements ITabHandler
 			/**
 			 * TTS_DONE
 			 */
-
+		
 		case FOCUS:
 			break;
+		case SET_HIGHLIGHT:
+			break;
+		case TTS_CANCEL:
+			break;
+		case TTS_SPEAK:
+			break;
 		default:
-			log(1,"Default case : Tabhandler");
 			break;
 		}
 	}
@@ -410,7 +411,7 @@ public class TabHandler extends Loggable implements ITabHandler
 	@Override
 	public synchronized void activate() throws Exception 
 	{
-		log(0,"Activate tab : " + tabId);
+		System.out.println("Activate tab : " + tabId);
 		if(active)
 			return;
 		active = true;
@@ -421,7 +422,7 @@ public class TabHandler extends Loggable implements ITabHandler
 			{
 				speak(nodeValueToSend);
 				hightLight(0);
-				log(1,"Highlight Message sent on ACTIVATE"); 
+				System.out.println("Highlight Message sent on ACTIVATE"); 
 			}
 		}
 	}
@@ -429,40 +430,18 @@ public class TabHandler extends Loggable implements ITabHandler
 	@Override
 	public void deactivate() 
 	{
-		log(0,"Deactivate tab : " + tabId);
+		System.out.println("Deactivate tab : " + tabId);
 		if(!active)
 			return;
 		active = false;
 		// TODO: cancel speaking
-		try {
-			cancel(newTextId);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
-	/**
-	 * 	cancels the current Text_id.
-	 * 	@param String This attribute stores the text_id
-	 *  @return void
-	 *  @throws Exception 
-	 */
-	public void cancel(long text_id) throws Exception{
-		Message ttsCancelMessage = new Message(MessageType.TTS_CANCEL, tabId);
-		ArrayList<String> textIdParameter = new ArrayList<String>();
-		textIdParameter.add(Long.toString(text_id));
-		ttsCancelMessage.getArguments().put("text_id", textIdParameter);
-		log(0,"TTS Cancel sent for "+text_id);
-		channel.send(ttsCancelMessage);		
-	}
-	
 	@Override
 	public synchronized int getNextTextId()
 	{
-		int nextTextId = 0; 
-		/*nextTextId = newTextId;
-		newTextId++;*/
+		int nextTextId = newTextId;
+		newTextId++;
 		return nextTextId;
 	}
 
@@ -472,35 +451,45 @@ public class TabHandler extends Loggable implements ITabHandler
 	 *  @return void
 	 */
 	public void speak(String nodeValueToSend) throws Exception{
-		//log(1,"highlighting");
+		//System.out.println("highlighting");
 		Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
 		ArrayList<String> textParameter = new ArrayList<String>();
 		textParameter.add(nodeValueToSend);
-		log(0,"[TabHandler Server] : Node value to be sent :"+ nodeValueToSend);
+		System.out.println("[TabHandler Server] : Node value to be sent :"+ nodeValueToSend);
 		ArrayList<String> textIdParameter = new ArrayList<String>();
-		//log(1,"Text Id :"+Long.toString(globalId));
+		//System.out.println("Text Id :"+Long.toString(globalId));
 		Long text_Id = base+(2*(++offset));
-		newTextId = text_Id;
 		textIdParameter.add(Long.toString(text_Id));
 		ttsSpeakMessage.getArguments().put("text", textParameter);
 		ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
 
-		log(0,"[TabHandler Server Speak] : text- "+ textParameter +"   :: text_id- "+ textIdParameter );
+		//new code added to fix the iterator bug
+		//text_id_bucket.add(text_Id);
+
+		//if (text_id_bucket.size()!=0){
+		System.out.println("[TabHandler Server Speak] : text- "+ textParameter +"   :: text_id- "+ textIdParameter );
 		channel.send(ttsSpeakMessage);
+		//	}
+
+		// new code ends		
+
+		//original code - commented
+		//channel.send(ttsSpeakMessage);
+
 	}	
 
 	private int setHighlight(int nodeIdToSend){
 		String ss = " ";
 		if((iterator.getPos() == null))
 		{
-			log(1,"node id is 0");
+			System.out.println("node id is 0");
 			return 0;
 		}
 		if(iterator.getPos().getNodeName().equals("textelement"))
 		{
 			nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
 			ss = iterator.getPos().getTextContent();
-			log(0,"[TabHandler Server SetHighlight] Text highlighted :" + ss);
+			System.out.println("[TabHandler Server SetHighlight] Text highlighted :" + ss);
 		}
 		else
 		{
@@ -526,11 +515,13 @@ public class TabHandler extends Loggable implements ITabHandler
 		else{
 			nodeIdToSend = nodeId;
 		}
-		log(0,"[TabHandler Server] : NodeID highlighted is "+ Integer.toString(nodeIdToSend));
+		System.out.println("[TabHandler Server] : NodeID highlighted is "+ Integer.toString(nodeIdToSend));
 		nodeToHighlight.add(Integer.toString(nodeIdToSend));
 		highlightMessage.getArguments().put("node_id", nodeToHighlight);
 
+		/*while(text_id_bucket.size() ==1){*/
 		channel.send(highlightMessage);
+		//}
 	}
 
 	private void processINIT_DOM(Node payload) throws Exception{
@@ -548,7 +539,7 @@ public class TabHandler extends Loggable implements ITabHandler
 			iterator = new NewDomIterator(this);
 			for(;iterator.getPos() != null;)
 			{
-				log(0,getNodeId(iterator.getPos())+">>> "+ iterator.getPos().getTextContent());
+				System.out.println(getNodeId(iterator.getPos())+">>> "+ iterator.getPos().getTextContent());
 				if(!iterator.next())
 					break;
 			}
@@ -559,7 +550,7 @@ public class TabHandler extends Loggable implements ITabHandler
 				String nodeValueToSend = null;
 				if((iterator.getPos() == null))
 				{
-					log(1,"node id is 0");
+					System.out.println("node id is 0");
 					return ;
 				}
 				if(iterator.getPos().getNodeName().equals("textelement"))
@@ -578,7 +569,7 @@ public class TabHandler extends Loggable implements ITabHandler
 				{
 					speak(nodeValueToSend);
 					//hightLight(0);
-					log(1,"Highlight Message sent at INIT_DOM"); 
+					System.out.println("Highlight Message sent at INIT_DOM"); 
 
 				}
 			}
@@ -591,77 +582,83 @@ public class TabHandler extends Loggable implements ITabHandler
 	}
 
 	private void processKeyPress(Message msg) throws Exception{
-		log(1,"Key Press");
+		System.out.println("Key Press");
 		String nodeValueToSend = "";
 		int node_Id =0;
 		if(active)
 		{
 			String keyPressed = msg.getArguments().get("press").get(0);
-			log(1,"Key Pressed now"+ keyPressed);
+			System.out.println("Key Pressed now"+ keyPressed);
 			if(keyPressed != null & !keyPressed.isEmpty())
 			{
 				if(keyPressed.equals("keyPressed Insert"))
 				{
+					System.out.println("KeyEvent "+ keyPressed);
 					if(pauseMode)
 					{
 						pauseMode = false;
 						nodeValueToSend = iterator.getPos().getTextContent();
 						/*	if(nodeValueToSend != null)
 						{
-							log(1,"Speaking!");
+							System.out.println("Speaking!");
 							speak(nodeValueToSend);
-							hightLight(0);							 
+							System.out.println("highlighting");
+							hightLight(0);
+							System.out.println("Highlight Message sent on KEY PAUSE"); 
 						}*/
 					}
 					else
 					{
 						pauseMode = true;
-						log(0,"PAUSE MODE ENABLED");
+						System.out.println("PAUSE MODE ENABLED");
 					}
 				}
 
 				else if(keyPressed.equals("keyPressed Up"))
 				{
-					//log(1,"Keypressed up");
+					//System.out.println("Keypressed up");
 					iterator.prev();
-
+					
 				}
 				else if(keyPressed.equals("keyPressed Down"))
 				{
-					//log(1,"Keypressed Down");
+					//System.out.println("Keypressed Down");
 					iterator.next();
-
+				
 				}
 				else
 				{
+					//System.out.println("Speaking in second flag");
 					speak(keyPressed);
+					//System.out.println("highlightng in second flag");
 					hightLight(node_Id);
 				}
 
 				if(nodeValueToSend != null)
 				{
-					log(1,"Speaking!");
+					System.out.println("Speaking!");
 					speak(nodeValueToSend);
-					log(1,"highlighting");
+					System.out.println("highlighting");
 					hightLight(node_Id);
-					log(1,"Highlight Message sent on KEY PAUSE"); 
+					System.out.println("Highlight Message sent on KEY PAUSE"); 
 				}
 			}
 		}
 	}
 
 	private void processMouseEvent(Message msg) throws Exception{
-		log(1,"Inside mouse");
+		System.out.println("Inside mouse");
 		int nodeClickedId = Integer.parseInt(msg.getArguments().get("id").get(0));
-		log(1,"nodeClick :"+nodeClickedId);
+		System.out.println("nodeClick :"+nodeClickedId);
 		Node newPosition = nodeMap.get(nodeClickedId);
-		log(1,"newPos: "+newPosition);
+		System.out.println("newPos: "+newPosition);
 		String ele = newPosition.getTextContent();
 		String nodeValueToSend = null;
 		if(ele.isEmpty() || ele == "" || ele==null)
-			log(1,"No node for "+nodeClickedId);
+			System.out.println("No node for "+nodeClickedId);
 		else/*(newPosition != null)*/
 		{
+			System.out.println("flag!");
 			boolean positionUpdated = iterator.setPos(newPosition);
 			if(positionUpdated)
 			{
@@ -671,13 +668,13 @@ public class TabHandler extends Loggable implements ITabHandler
 					nodeValueToSend = currentNode.getTextContent();
 				}
 				if(nodeValueToSend == null){
-					log(1,"NULL MOUSE CLICK");
+					System.out.println("NULL MOUSE CLICK");
 				}
 				else
 				{
 					speak(nodeValueToSend);
 					hightLight(0);
-					log(1,"Highlight Message sent on MOUSE CLICK"); 
+					System.out.println("Highlight Message sent on MOUSE CLICK"); 
 
 				}
 			}
@@ -687,22 +684,27 @@ public class TabHandler extends Loggable implements ITabHandler
 	private void processTTSDone(Message msg) throws Exception{
 		long text_id = Long.parseLong(msg.getArguments().get("text_id").get(0)); 
 
-		log(1,"Received a TTS_DONE message with pauseMode : " + pauseMode);
-		log(1,"Received a TTS Done message for text_id" + text_id );
+		System.out.println("Received a TTS_DONE message with pauseMode : " + pauseMode);
+		System.out.println("Received a TTS Done message for text_id" + text_id );
 		if(active && !pauseMode)
 		{
-			log(1,"beginning iterator");
+			/*System.out.println("in loop");
+			if(text_id_bucket.contains(text_id)){
+				System.out.println(text_id + "found.removing..");
+				text_id_bucket.remove(text_id);
+			}*/
+			System.out.println("beginning iterator");
 			if(iterator.next())
 			{
 				String ttsDoneNodeValueToSend = iterator.getPos().getTextContent();
 				if(ttsDoneNodeValueToSend == null || ttsDoneNodeValueToSend.equals(null)){
-					log(1,"Nothing to speak now");
+					System.out.println("NULL TABHANDLER FLAG");
 				}
 				else if(ttsDoneNodeValueToSend != null || !ttsDoneNodeValueToSend.equals(null))
 				{
 					speak(ttsDoneNodeValueToSend);
 					hightLight(0);
-					log(1,"Highlight Message sent on TTS_DONE"); 
+					System.out.println("Highlight Message sent on TTS_DONE"); 
 				}
 			}
 		}
