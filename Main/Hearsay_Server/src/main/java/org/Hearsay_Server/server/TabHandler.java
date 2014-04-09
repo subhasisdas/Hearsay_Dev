@@ -450,6 +450,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		channel.send(ttsCancelMessage);		
 	}
 
+	//todo : not used anywhere. Should we delete this?
 	@Override
 	public synchronized int getNextTextId()
 	{
