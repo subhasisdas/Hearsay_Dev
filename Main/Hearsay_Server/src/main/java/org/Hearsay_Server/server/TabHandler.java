@@ -485,26 +485,6 @@ public class TabHandler extends Loggable implements ITabHandler
 		channel.send(ttsSpeakMessage);
 	}	
 
-	private int setHighlight(int nodeIdToSend){
-		String ss = " ";
-		if((iterator.getPos() == null))
-		{
-			log(1,"node id is 0");
-			return 0;
-		}
-		if(iterator.getPos().getNodeName().equals("textelement"))
-		{
-			nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
-			ss = iterator.getPos().getTextContent();
-			log(0,"[TabHandler Server SetHighlight] Text highlighted :" + ss);
-		}
-		else
-		{
-			nodeIdToSend = getNodeId(iterator.getPos());
-		}
-		return nodeIdToSend;
-	}
-
 	/**
 	 * 	highlight the input parameter.
 	 * 	@param String This attribute stores the text content of the node and its descendants
@@ -515,9 +495,25 @@ public class TabHandler extends Loggable implements ITabHandler
 		Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
 		ArrayList<String> nodeToHighlight = new ArrayList<String>();
 		int nodeIdToSend = 0;	
+		//String ss = " ";
 		if(nodeId == 0){
 			//sending the highlight text
-			nodeIdToSend = setHighlight(nodeIdToSend);
+			log(0,"highlight with nodeId =0");
+			if((iterator.getPos() == null))
+			{
+				log(1,"node id is 0");
+				return;
+			}
+			if(iterator.getPos().getNodeName().equals("textelement"))
+			{
+				log(0,"setting node id");
+				nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+				//ss = iterator.getPos().getTextContent();				
+			}
+			else
+			{
+				nodeIdToSend = getNodeId(iterator.getPos());
+			}			
 		}
 		else{
 			nodeIdToSend = nodeId;
@@ -602,6 +598,8 @@ public class TabHandler extends Loggable implements ITabHandler
 					{
 						pauseMode = false;
 						nodeValueToSend = iterator.getPos().getTextContent();
+						if(iterator.getPos() != null)
+							node_Id = getNodeId(iterator.getPos());
 						/*	if(nodeValueToSend != null)
 						{
 							log(1,"Speaking!");
@@ -647,13 +645,16 @@ public class TabHandler extends Loggable implements ITabHandler
 	}
 
 	private void processMouseEvent(Message msg) throws Exception{
-		log(1,"Inside mouse");
+		
 		int nodeClickedId = Integer.parseInt(msg.getArguments().get("id").get(0));
-		log(1,"nodeClick :"+nodeClickedId);
-		Node newPosition = nodeMap.get(nodeClickedId);
-		log(1,"newPos: "+newPosition);
-		String ele = newPosition.getTextContent();
 		String nodeValueToSend = null;
+		
+		Node newPosition = nodeMap.get(nodeClickedId);
+	
+		//needed to check empty non-null values
+		//takes care of the check newPosition == null as well
+		String ele = newPosition.getTextContent();
+		
 		if(ele.isEmpty() || ele == "" || ele==null)
 			log(1,"No node for "+nodeClickedId);
 		else/*(newPosition != null)*/
@@ -662,9 +663,12 @@ public class TabHandler extends Loggable implements ITabHandler
 			if(positionUpdated)
 			{
 				Node currentNode = iterator.getPos();
+				int nodeId = 0;
 				if(currentNode != null)
 				{
 					nodeValueToSend = currentNode.getTextContent();
+					nodeId = 0;
+					//nodeId = getNodeId(currentNode);
 				}
 				if(nodeValueToSend == null){
 					log(1,"NULL MOUSE CLICK");
@@ -672,7 +676,7 @@ public class TabHandler extends Loggable implements ITabHandler
 				else
 				{
 					speak(nodeValueToSend);
-					hightLight(0);
+					hightLight(nodeId);
 					log(1,"Highlight Message sent on MOUSE CLICK"); 
 
 				}
@@ -682,20 +686,24 @@ public class TabHandler extends Loggable implements ITabHandler
 
 	private void processTTSDone(Message msg) throws Exception{
 		long text_id = Long.parseLong(msg.getArguments().get("text_id").get(0)); 
+		int nodeId =0;
 		log(1,"Received a TTS Done message with pauseMode : " + pauseMode + " for text_id" + text_id );
 		if(active && !pauseMode)
 		{
 			log(1,"beginning iterator");
 			if(iterator.next())
 			{
-				String ttsDoneNodeValueToSend = iterator.getPos().getTextContent();
+				Node nodeToSend = iterator.getPos();
+				String ttsDoneNodeValueToSend = nodeToSend.getTextContent();				
+				//nodeId = getNodeId(nodeToSend);
+				
 				if(ttsDoneNodeValueToSend == null || ttsDoneNodeValueToSend.equals(null)){
 					log(1,"NULL TABHANDLER FLAG");
 				}
-				else if(ttsDoneNodeValueToSend != null || !ttsDoneNodeValueToSend.equals(null))
+				else
 				{
 					speak(ttsDoneNodeValueToSend);
-					hightLight(0);
+					hightLight(nodeId);
 					log(1,"Highlight Message sent on TTS_DONE"); 
 				}
 			}
