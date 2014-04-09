@@ -241,7 +241,6 @@ public class TabHandler extends Loggable implements ITabHandler
 				if(nodeValueToSendPI != null)
 				{
 					try{speak(nodeValueToSendPI);hightLight(getNodeId(iterator.getPos()));} catch(Exception e){}					
-					//speakAndHighlightNode(nodeValueToSend);
 				}
 
 			}
