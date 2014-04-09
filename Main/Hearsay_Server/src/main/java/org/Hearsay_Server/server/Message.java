@@ -93,7 +93,7 @@ public class Message
 			}
 		}
 		Node parameters = xmlDocument.getElementsByTagName("parameters").item(0);
-		//System.out.println("Parameter length : " + parameters.getChildNodes().getLength());
+		
 		if(parameters.getNodeType() == Node.ELEMENT_NODE)
 		{
 			Element parametersElement = (Element) parameters;

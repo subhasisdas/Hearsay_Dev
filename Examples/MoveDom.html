@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Move Dom</title>
+
+<script>
+			
+	function set()
+	{
+		window.setInterval("moveattribute()",4500)
+	}			
+	
+	var x = 0;
+	
+	function moveattribute()
+	{
+		if(x == 0)
+		{
+			document.getElementById("newlist").appendChild(document.getElementById("move"));
+			x = 1;
+		}
+	}
+	
+</script>
+
+</head>
+<body onload="set();">
+	<p id="hello">Hello</p>
+	<p id="newhello">New Hello</p>
+	<p>Hello other</p>
+	<h3>FIRST LIST:</h3>
+	<ul id="list">
+	<li id="move">One element to be moved</li>
+	<li>Second element</li>
+	<li>Third element</li>
+	<li>Fourth element</li>
+	<li>Fifth element</li>
+	</ul>
+	<h3>SECOND LIST:</h3>
+	<ul id="newlist">
+	<li>Fifth element</li>
+	</ul>
+	<p>Hello</p>
+	<p>Hello</p>
+	<p>Hello</p>
+</body>
+</html>

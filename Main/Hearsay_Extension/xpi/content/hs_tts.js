@@ -12,7 +12,7 @@ function hsCreateTTS(listener)
 			cancel: function(text_id)
 			{
 				try{
-					if(text_id!=current_text_id)	// not current text, ignore
+					if(text_id != current_text_id)	// not current text, ignore
 						return;
 					//put it in try catch block and ignore
 					var mediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);

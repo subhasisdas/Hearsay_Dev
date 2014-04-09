@@ -46,7 +46,6 @@
 				<version>2.4</version>
 
 				<configuration>
-					<!-- <appendAssemblyId>false</appendAssemblyId> -->
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
@@ -69,15 +68,6 @@
 				</executions>
 
 			</plugin>
-
-
-			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>exec-maven-plugin</artifactId> 
-				<version>1.2.1</version> <executions> <execution> <goals> <goal>java</goal> 
-				</goals> </execution> </executions> <configuration> <addClasspath>true</addClasspath> 
-				<mainClass>org.Hearsay_Server.server.Hearsay_Main</mainClass> </configuration> 
-				</plugin> -->
-
-
 		</plugins>
 	</build>
 

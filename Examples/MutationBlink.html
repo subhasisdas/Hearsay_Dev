@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Mutation</title>
+
+<script>
+
+function set()
+{
+	window.setInterval("blink();tp();",2000)
+}
+
+var j = "none";
+var k = "none";
+var l = "none";
+function tp()
+{
+	window.setInterval("tp1()",0)
+}
+function tp1()
+{
+document.getElementById("blink4").style.display = k;
+}
+function blink()
+{
+	//document.getElementById("blink1").style.display = j;
+	document.getElementById("blink2").style.display = j;
+	document.getElementById("blink4").style.display = j;
+	document.getElementById("blink6").style.display = j;
+	//document.getElementById("blink8").style.display = j;
+	//document.getElementById("blink10").style.display = j;
+	//document.getElementById("blink3").style.display = j;	
+	
+	//document.getElementById("blink5").style.display = j;
+	
+	if(j == "none")
+		j = "inline";
+	else
+		j = "none";
+	if(k == "none")
+		k = "";
+	else
+		k = "none";
+}
+function sets()
+{
+document.getElementById("blink3").style.display = j;	
+	document.getElementById("blink4").style.display = none;
+}
+
+</script>
+
+</head>
+<body id="bodycontent" onload="set();">
+	<p id="blink1">Hello 1</p>
+	<p id="blink2">Hello 2</p>
+	<p id="blink3">Hello 3</p>
+	<p id="blink4">Hello 4</p>
+	<p id="blink5">Hello 5</p>
+	<p id="blink8">Hello 6</p>
+	<p id="blink6">Hello 7</p>
+	
+
+	
+
+</body>
+</html>

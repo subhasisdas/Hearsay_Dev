@@ -19,7 +19,7 @@ var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getServ
 
 function log(msg) 
 {	
-	
+
 }
 function getTabId(/*Browser*/ br)
 {
@@ -42,7 +42,7 @@ function ignoreCheckFunction(/*Node*/ node)
 
 	if(node.nodeType == 3 && node.nodeValue.replace(/^\s+/, '') == '')	// empty text nodes
 		return true;
-	
+
 	if(node.getAttribute && node.getAttribute("classname") == "_ignore_")
 		return true;
 
@@ -208,6 +208,10 @@ var listener =
 				break;
 			case hsMsgType.TTS_CANCEL:
 				// TODO: implement it
+				log("Receive TTS_CANCEL message : "+ message);
+				var text_id = msg.getParameter("text_id");
+				text_id = text_id && text_id.length>0 && text_id[1];
+				tts.cancel(text_id);
 				break;
 			case hsMsgType.SET_HIGHLIGHT:
 				log("hsMsgType.SET_HIGHLIGHT: Received");
@@ -250,7 +254,7 @@ var listener =
 
 			}
 		},
-			
+
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
 			log(" onClick message sent!"+ button);
@@ -270,7 +274,7 @@ var listener =
 		},
 		// DOM events observer
 		// TODO: implement it
-		
+
 		onDOMInit: /*void*/function(/*hsBrowserHandler*/ handler, /*Node*/ xml_dom, /*long*/ tabId)
 		{
 			log('onDOMInit invoked : ' + handler.getBrowser());
@@ -342,7 +346,7 @@ var listener =
 				transport.send(moveDOMMessage.toXMLString());
 			}
 		},
-		
+
 		// onValueChange
 };
 

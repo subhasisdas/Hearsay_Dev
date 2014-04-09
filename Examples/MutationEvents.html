@@ -1,0 +1,85 @@
+<html>
+	<head>
+	<title>Mutation Page</title>
+		<script src="mutation_observer.js"></script>
+		<script>
+			
+			var i = 0;
+			var j = 0;
+			var count=0; var nn=0;
+			function changeattribute()
+			{
+				//font-family:verdana;padding:20px
+				//document.getElementById("hello").style.font-family="verdana";
+				//document.getElementById("hello").style.padding="20px";
+				//document.getElementById("hello").style.padding="20px";
+				//document.getElementById("hello").style.opacity="0.5";
+				document.getElementById("hello").style.display="none";
+				//document.getElementById("hello").setAttribute("hidden","true");
+			}
+			function __helper()
+			{
+				window.nn++;
+				if(window.count<5) {window.count++ ; appendnode(); }
+				if(window.count>4 && window.count <6) {window.count++ ; deletenode(); changeattribute(); }
+			}
+			function helper()
+			{
+				setInterval(function(){if(window.nn<5) __helper();},1000);				
+			}
+
+			function appendnode()
+			{
+				//alert("called");
+				var node = document.createElement("Li");
+				var x = "listcontent" + i;
+				var g = document.getElementById("1");
+				i++;
+				node.setAttribute("id",x)
+				var textnode = document.createTextNode(x);
+				node.appendChild(textnode);
+				document.getElementById("1").parentNode.insertBefore(node,g.nextSibling);
+				return;
+
+				
+			}
+				
+			function appendInnerHTML()
+			{
+				var inner = "Text:<textarea></textarea>"
+				+"<ul>My List<li>Element Appended to Body</li>"
+				+"<li >Element Appended to Body</li><ul/>"
+				+"<button onclick=\"appendInnerHTML()\">Append Inner HTML</button>"
+				+"<button onclick=\"appendnode()\">Append Node</button>";			
+				document.getElementById("bodycontent").innerHTML = inner;
+			}
+			
+			function deletenode()
+			{
+				var x = "listcontent" + j;
+				j++;
+				var removenode = document.getElementById(x);
+				document.getElementById("mylist").removeChild(removenode);
+			}
+		</script>
+	</head>
+	<body id="bodycontent" onload="helper();">
+		
+		<p id="p1"> hello 1</p>
+		<p id="pcontent">				
+		<p id="p2"> hello 2</p>
+		<ul id="mylist">
+			<li id="1">one</li>
+			<li id="2">two</li>
+			<li id="3">three</li>
+		</ul>
+			<p id="p3"> hello 3</p>
+		<p id="hello"> hello 4</p>
+		<p id="hello1"> hello 5</p>
+		
+		</p>
+		<!--<p id="p5"> hello 5</p>
+		<button onclick="appendnode()">Append Node</button>
+		<button onclick="deletenode()">Remove</button> -->
+	</body>
+</html>
