@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html>
+    <head>
+	<title> Case 3: Frames loaded based on input</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    </head>
+
+<script type="text/javascript">
+//sets the frame sources
+onload=function()
+{
+	parent.frame1.location = 'Frame3.html';
+	parent.frame2.location = 'Frame2.html';
+	parent.frame3.location = 'Frame3.html';
+}
+
+</script
+
+<body>
+	<iframe  width="500" height="500" id="frame1" name="frame1"></iframe>
+	<iframe  width="300" height="500" id="frame2" name="frame2"></iframe>
+	<iframe  width="400" height="500" id="frame3" name="frame3"></iframe>
+</body>
+ </html>
