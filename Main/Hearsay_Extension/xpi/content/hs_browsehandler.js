@@ -189,6 +189,7 @@
 	 */
 	function initializeNodeMap(root)
 	{
+		log('Initializing node map for document node : ' + root.nodeName + " with value : " + root.nodeValue + " and type : " + root.nodeType);
 		if(ignoreCheckFunction(root))
 			return;
 
@@ -377,7 +378,8 @@
 		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
-	            if(summary.attributeChanged[attrName][j].getAttribute(attrName))
+	            if((summary.attributeChanged[attrName][j].getAttribute(attrName))
+	            	&& (summary.attributeChanged[attrName][j]._internalNodeId != undefined))
 	            {
 		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            attr[i] = attrName;

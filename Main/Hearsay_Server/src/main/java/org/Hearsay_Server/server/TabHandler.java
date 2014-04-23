@@ -212,7 +212,9 @@ public class TabHandler extends Loggable implements ITabHandler
 	{
 		List<Integer> listNodes = new ArrayList<Integer>();
 		for(int i=0;i<listStr.size();i++)
-			listNodes.add(Integer.parseInt(listStr.get(i)));
+		{	
+				listNodes.add(Integer.parseInt(listStr.get(i)));
+		}
 		return listNodes;
 	}
 

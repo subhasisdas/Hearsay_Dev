@@ -45,7 +45,10 @@ function ignoreCheckFunction(/*Node*/ node)
 
 	if(node.getAttribute && node.getAttribute("classname") == "_ignore_")
 		return true;
-
+	
+	if(typeof(node) == "undefined")
+		return true;
+	
 	return false;
 }
 

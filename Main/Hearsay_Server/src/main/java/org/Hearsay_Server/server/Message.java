@@ -136,13 +136,47 @@ public class Message
 		}
 		return message;
 	}
+	
+	/*
+	 * Utility method to strip XML message from invalid characters that
+	 * might be allowable in HTML
+	 * Valid Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+	 * 
+	 * input : String <hearsaMessage> //invoked inside parseXML()
+	 * 
+	 * output: String <cleanedhearsayMessage>
+	 * */
+	public static String cleanInValidXMLCharacters(String in) {
+        StringBuffer out = new StringBuffer(); // Used to hold the output.
+        char current; // Used to reference the current character.
+
+        if (in == null || ("".equals(in))) return ""; // vacancy test.
+        for (int i = 0; i < in.length(); i++) {
+            current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
+            /*Valid Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]*/
+            if ((current == 0x9) ||
+                (current == 0xA) ||
+                (current == 0xD) ||
+                ((current >= 0x20) && (current <= 0xD7FF)) ||
+                ((current >= 0xE000) && (current <= 0xFFFD)) ||
+                ((current >= 0x10000) && (current <= 0x10FFFF)))
+                out.append(current);
+        }
+        String output = out.toString();
+        String cleanOutput = output.replaceAll( "&([^;]+(?!(?:\\w|;)))", "&amp;$1" );
+        return cleanOutput;
+    }    
+	
 
 	public static Message parseXML(String hearsayMessage) throws Exception
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		InputSource is = new InputSource();
-		is.setCharacterStream(new StringReader(hearsayMessage));
-		DocumentBuilder builder = factory.newDocumentBuilder();
+		String hearsayMsgValidEncoding = cleanInValidXMLCharacters(hearsayMessage);
+		is.setCharacterStream(new StringReader(hearsayMsgValidEncoding));
+		is.setEncoding("UTF-8");
+		
+		DocumentBuilder builder = factory.newDocumentBuilder();		
 		Document xmlDoc = builder.parse(is);
 		return parseDocument(xmlDoc);
 	}
