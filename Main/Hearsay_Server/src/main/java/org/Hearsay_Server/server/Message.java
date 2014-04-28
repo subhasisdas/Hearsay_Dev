@@ -145,6 +145,8 @@ public class Message
 	 * input : String <hearsaMessage> //invoked inside parseXML()
 	 * 
 	 * output: String <cleanedhearsayMessage>
+	 * 
+	 * todo : will be permanently removed once javascript side takes care of filtering
 	 * */
 	public static String cleanInValidXMLCharacters(String in) {
         StringBuffer out = new StringBuffer(); // Used to hold the output.
@@ -172,8 +174,9 @@ public class Message
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		InputSource is = new InputSource();
-		String hearsayMsgValidEncoding = cleanInValidXMLCharacters(hearsayMessage);
-		is.setCharacterStream(new StringReader(hearsayMsgValidEncoding));
+		//String hearsayMsgValidEncoding = cleanInValidXMLCharacters(hearsayMessage);
+		//is.setCharacterStream(new StringReader(hearsayMsgValidEncoding));
+		is.setCharacterStream(new StringReader(hearsayMessage));
 		is.setEncoding("UTF-8");
 		
 		DocumentBuilder builder = factory.newDocumentBuilder();		

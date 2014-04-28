@@ -283,6 +283,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 					{
 						var strbytes = _hstFormatMessageLength(message);
 						_OutStream.write(strbytes, 8);
+						log(message);
 						_OutStream.write(message, message.length);
 					}
 					catch(e)

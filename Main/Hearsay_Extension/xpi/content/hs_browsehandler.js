@@ -420,14 +420,23 @@
 		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
+<<<<<<< Updated upstream
 	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
+=======
+	            if((summary.attributeChanged[attrName][j].getAttribute(attrName))
+	            	&& (summary.attributeChanged[attrName][j]._internalNodeId))
+>>>>>>> Stashed changes
 	            {
 		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            attr[i] = attrName;
 		            values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
 		            i++;
 	            }
+<<<<<<< Updated upstream
 	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
+=======
+	            else if (summary.attributeChanged[attrName][j]._internalNodeId)
+>>>>>>> Stashed changes
 	            {
 	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            removed_attr[k] = attrName;

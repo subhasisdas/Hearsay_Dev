@@ -16,10 +16,12 @@ var newTabId;
 var tabMap = {};	// map tabId: tab
 var activeTabBrowserHandler = null;
 var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+//variable to valide XML characters chars : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+var NOT_SAFE_IN_XML_1_0 = /[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/gm;
 
 function log(msg) 
 {	
-
+	consoleService.logStringMessage("transport : [hs_main] "+msg);	
 }
 function getTabId(/*Browser*/ br)
 {
@@ -45,12 +47,82 @@ function ignoreCheckFunction(/*Node*/ node)
 
 	if(node.getAttribute && node.getAttribute("classname") == "_ignore_")
 		return true;
-	
+
 	if(typeof(node) == "undefined")
 		return true;
-	
+
+	log("in ignoreCheckFunction : checking validXML");
+
+	if(checkValidXMLChar(Node))
+		return true;
+
 	return false;
 }
+
+function sanitizeStringForXML(theString) {
+	
+	return theString.replace(NOT_SAFE_IN_XML_1_0, '');
+}
+
+function removeInvalidCharacters(/*Node*/ node){
+	
+	log("indide removeInvalidCharacters");
+	if (node.attributes) {
+		for (var i = 0; i < node.attributes.length; i++) {
+			var attribute = node.attributes[i];
+			if (attribute.nodeValue) {
+				attribute.nodeValue = sanitizeStringForXML(attribute.nodeValue);
+			}
+		}
+	}
+	log("Now checking the children");
+	if (node.childNodes) {
+		for (var i = 0; i < node.childNodes.length; i++) {
+			var childNode = node.childNodes[i];
+			if (childNode.nodeType == 1 /* ELEMENT_NODE */) {
+				removeInvalidCharacters(childNode);
+			} else if (childNode.nodeType == 3 /* TEXT_NODE */) {
+				if (childNode.nodeValue) {
+					childNode.nodeValue = sanitizeStringForXML(childNode.nodeValue);
+				}
+			}
+		}
+	}
+}
+
+function checkValidXMLChar(/*Node*/ node){
+
+	log("checking node name");
+	
+	if(node.nodeName){
+		if(node.nodeName.search(NOT_SAFE_IN_XML_1_0) != -1)
+			//node.nodeName = sanitizeStringForXML(node.nodeName);
+			return true;
+
+		if (node.attributes) {
+			log("checking node attribute names");
+			for (var i = 0; i < node.attributes.length; i++) {
+				var attribute = node.attributes[i];
+				if (attribute.nodeName.search(NOT_SAFE_IN_XML_1_0) != -1) {
+					//attribute.nodeName = sanitizeStringForXML(attribute.nodeName);
+					//return true;
+					log("removing an invalid attribute");
+					node.removeAttribute(attribute);
+					log("removed");
+				}
+			}
+			log("checking node attribute names done");
+		}
+		{
+			log("invoking removeInvalidCharacters");
+			removeInvalidCharacters(node);
+		}	
+		//return false;
+	}
+	//else return false;
+	
+	return false;
+} 
 
 function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
 {
