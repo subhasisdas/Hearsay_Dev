@@ -27,21 +27,18 @@
 /*hsBrowserHandler*/ function hsCreateBrowserHandler(/*Browser*/br, /*Listener*/ listener, 
 		/*long*/ tabId, /*custom filter ignoreCheckFn(Node to check)*/ ignoreCheckFunction)
 {	
-	function myfunc()
-	{
-		var newScript=document.createElement("script");
-		newScript.setAttribute("src", "try.js");
-		document.getElementById('main-window').appendChild(newScript);
-	}
-	
+	var observer;
+	var frameobserver = {};
+	var k = 0;
+
+	//handling normal content of the browser 'without' frames
 	function initializeDocument()
 	{
-		var observer = new MutationSummary({
+		observer = new MutationSummary({
 		  callback: handleChanges,
 		  rootNode: br.contentDocument,
 		  queries: [{all:true}]
 		});
-		
 		newNodeId = 1;
 		docToSend = br.contentDocument;
 		initializeNodeMap(br.contentDocument.documentElement);
@@ -50,6 +47,37 @@
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
 
+	//handling frames
+	function initializeFrameDocument()
+	{
+		for (var j = br.contentDocument.defaultView.frames.length-1; j >= 0; j--)
+		{
+			docToSend = br.contentDocument.defaultView.frames[j].document;
+			//array of mutation summary observers for the frames
+			frameobserver[k] = new MutationSummary({
+				  callback: handleChanges,
+				  rootNode: docToSend,
+				  queries: [{all:true}]
+				});
+			k++;
+			if(!(docToSend.documentElement._internalNodeId in nodeMap))
+			{
+				initializeNodeMap(docToSend.documentElement);
+				var xmlDocument = docToSend.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
+				var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
+				var parent = br.contentDocument.defaultView.frames[j].frameElement.parentNode;
+				var parent_id = "";
+				if(parent != null && parent._internalNodeId != undefined)
+				{
+					parent_id = br.contentDocument.defaultView.frames[j].frameElement.parentNode._internalNodeId;
+				}
+				listener.onDOMUpdate(obj , parent_id, "", xmlPayload, tabId);
+			}
+		}
+
+	}
+
+	//common functionlity
 	function handleLoad(event)
 	{
 		var eventDocument = event.target;
@@ -59,6 +87,11 @@
 			{
 				initializeDocument();
 			}
+
+		}
+		else
+		{
+			initializeFrameDocument();	
 		}
 	}
 
@@ -66,6 +99,9 @@
 	{
 		docToSend = null;
 		// Release Mutation observer??
+		delete observer;
+		frameobserver = {};
+		delete frameobserver;
 	}
 
 	var newNodeId = 0;
@@ -85,8 +121,15 @@
 						continue;
 					else
 					{
-						// Clear current highlightning,
-						ClearHighlightsDoc(br.contentDocument);						
+						// Clear current highlighting,
+
+						ClearHighlightsDoc(br.contentDocument);		
+
+						for(var i=0; i<br.contentDocument.defaultView.frames.length; i++)
+						{
+							ClearHighlightsDoc(br.contentDocument.defaultView.frames[i].document);
+						}
+
 						var nodeObject = this.getNode(ids[index]);						                                              
 						SetHighlightControl(nodeObject);
 					}
@@ -189,7 +232,6 @@
 	 */
 	function initializeNodeMap(root)
 	{
-		log('Initializing node map for document node : ' + root.nodeName + " with value : " + root.nodeValue + " and type : " + root.nodeType);
 		if(ignoreCheckFunction(root))
 			return;
 
@@ -228,24 +270,24 @@
 		log("This was the payload generated : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
-	
+
 	function handleChanges(summaries)
 	{
 		var summary = summaries[0];
-		
+
 		updateDOM(summary);
 		deleteDOM(summary);
 		attrChange(summary);
 		moveDOM(summary);
 	}
-	
+
 	function updateDOM(summary)
 	{
 		var elements = new Array();
 		var parents = new Array();
 		var siblings = new Array();
 		var i = 0;
-		
+
 		summary.added.forEach(function(element)
 		{					
 			var parent = element.parentNode;
@@ -258,7 +300,7 @@
 				i++;
 			}
 		}); 
-		
+
 		handleAddedElements(elements,parents,siblings);
 	}
 
@@ -268,12 +310,12 @@
 		var parents = new Array();
 		var siblings = new Array();
 		var i = 0;
-		
+
 		summary.reparented.forEach(function(reparent)
 		{
 			var parent = reparent.parentNode;
 			var sibling = reparent.previousSibling;
-			
+
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
 			{
 				elements[i] = reparent;
@@ -281,14 +323,14 @@
 				siblings[i] = sibling;
 				i++;
 			}
-			
+
 		});
-		 		
+
  		summary.reordered.forEach(function(reorder)
 		{
  			var parent = reorder.parentNode;
 			var sibling = reorder.previousSibling;
-			
+
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
 			{
 				elements[i] = reorder;
@@ -301,7 +343,7 @@
  		handleMovedElements(elements,parents,siblings);
  		
 	}
-	
+
 	function handleMovedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
@@ -309,7 +351,7 @@
 			var new_parent_id = "";
 			var new_prev_sibling_id = "";
 			var moved_node_id = elements[j]._internalNodeId;
-			
+
 			if(parents[j]._internalNodeId != undefined)
 			{
 				new_parent_id = parents[j]._internalNodeId;
@@ -318,11 +360,11 @@
 			{
 				new_prev_sibling_id = siblings[j]._internalNodeId;
 			}
-			
+
 			listener.onDOMMove(obj , new_parent_id, new_prev_sibling_id, moved_node_id , tabId);
 		}
 	}
-	
+
 	function handleAddedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
@@ -346,14 +388,14 @@
 			}
 		}
 	}
-	
+
 	function deleteDOM(summary)
 	{
 		var removed = new Array();
 		var i = 0;
 		summary.removed.forEach(function(removedEl)
 		{
-			
+
 			if(removedEl._internalNodeId != undefined)
 			{
 				removed[i] = removedEl._internalNodeId;
@@ -361,11 +403,11 @@
 				i++;
 			}
 	    });
-		
+
 		if(removed.length > 0)
 			listener.onDOMDelete(obj , removed, tabId);
 	}
-	
+
 	function attrChange(summary)
 	{
 		var node_id = new Array();
@@ -378,15 +420,14 @@
 		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
-	            if((summary.attributeChanged[attrName][j].getAttribute(attrName))
-	            	&& (summary.attributeChanged[attrName][j]._internalNodeId != undefined))
+	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
 	            {
 		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            attr[i] = attrName;
 		            values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
 		            i++;
 	            }
-	            else
+	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
 	            {
 	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            removed_attr[k] = attrName;
@@ -394,13 +435,13 @@
 	            }
 			}
 		});	
-		
+
 		if(node_id.length > 0)
 			listener.onDOMAttrChange(obj, node_id, attr, values, tabId);
 		if(removed_node_id.length > 0)
 			listener.onDOMAttrDelete(obj, removed_node_id, removed_attr, tabId);
 	}
-		
+
 	function find(parent,elements)
 	{
 		for(var j=0; j<elements.length; j++)
@@ -412,7 +453,7 @@
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Update part of document, receive load as well as DOMContentLoad
 	 */
