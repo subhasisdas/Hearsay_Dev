@@ -1,0 +1,7 @@
+content	Extension content/ 
+overlay	chrome://browser/content/browser.xul	chrome://Extension/content/overlay.xul
+
+locale	Extension	en-US	locale/en-US/
+
+skin	Extension	classic/1.0	skin/
+style	chrome://global/content/customizeToolbar.xul	chrome://Extension/skin/overlay.css

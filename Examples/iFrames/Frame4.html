@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Frame 1</title>
+
+<script  language="JavaScript" type="text/JavaScript">
+var aa =1 ;
+var aaa=1;
+function addFrame()
+{
+	var iframe = document.createElement('iframe');
+	iframe.frameBorder = 1;
+	iframe.width = "200px";
+	iframe.height = "50px";
+	iframe.id = "iframe"+aa++;
+
+	iframe.onload = function()
+	{
+	    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    	var p = doc.createElement('p');
+    	p.textContent = "Paragraph in iframe"+aaa++;
+    	doc.body.appendChild(p);
+	};
+
+	document.getElementById("div").appendChild(iframe);
+}
+
+function removeFrame()
+{
+document.getElementById("div").removeChild(document.getElementById("iframe"+--aa));
+}
+</script>
+
+</head>
+
+<body>
+<h1>Frame test : Case 3: Dynamic add/delete Iframes</h1>
+<h4> Select a particular frame to load</h4>
+<input type = "button"  value= "Select Frame2" onClick = window.open("Frame2.html","frame2","") >
+<br></br>
+<input type = "button"  value= "Select Frame3" onClick = window.open("Frame3.html","frame3","") >
+<br></br>
+<input type = "button"  value= " Clear Frame2 " onClick = window.open("about:blank","frame2","") >
+<br></br>
+<input type = "button"  value= " Clear Frame3 " onClick = window.open("about:blank","frame3","") >
+<br></br>
+<input type = "button"  value= " Dynamic create Frame" onClick = "addFrame()">
+<br></br>
+<input type = "button"  value= " Dynamic delete Frame" onClick = "removeFrame()" >
+
+<div id="div"> </div>
+</body>
+</html>

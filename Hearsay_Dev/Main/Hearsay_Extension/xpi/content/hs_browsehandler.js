@@ -30,7 +30,11 @@
 	var observer;
 	var frameobserver = {};
 	var k = 0;
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	//handling normal content of the browser 'without' frames
 	function initializeDocument()
 	{
@@ -46,7 +50,11 @@
 		var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	//handling frames
 	function initializeFrameDocument()
 	{
@@ -74,7 +82,11 @@
 				listener.onDOMUpdate(obj , parent_id, "", xmlPayload, tabId);
 			}
 		}
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	}
 
 	//common functionlity
@@ -87,7 +99,11 @@
 			{
 				initializeDocument();
 			}
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		}
 		else
 		{
@@ -122,14 +138,24 @@
 					else
 					{
 						// Clear current highlighting,
+<<<<<<< HEAD
 
 						ClearHighlightsDoc(br.contentDocument);		
 
+=======
+						
+						ClearHighlightsDoc(br.contentDocument);		
+						
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 						for(var i=0; i<br.contentDocument.defaultView.frames.length; i++)
 						{
 							ClearHighlightsDoc(br.contentDocument.defaultView.frames[i].document);
 						}
+<<<<<<< HEAD
 
+=======
+						
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 						var nodeObject = this.getNode(ids[index]);						                                              
 						SetHighlightControl(nodeObject);
 					}
@@ -270,24 +296,40 @@
 		log("This was the payload generated : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
+<<<<<<< HEAD
 
 	function handleChanges(summaries)
 	{
 		var summary = summaries[0];
 
+=======
+	
+	function handleChanges(summaries)
+	{
+		var summary = summaries[0];
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		updateDOM(summary);
 		deleteDOM(summary);
 		attrChange(summary);
 		moveDOM(summary);
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function updateDOM(summary)
 	{
 		var elements = new Array();
 		var parents = new Array();
 		var siblings = new Array();
 		var i = 0;
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		summary.added.forEach(function(element)
 		{					
 			var parent = element.parentNode;
@@ -300,7 +342,11 @@
 				i++;
 			}
 		}); 
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		handleAddedElements(elements,parents,siblings);
 	}
 
@@ -310,12 +356,20 @@
 		var parents = new Array();
 		var siblings = new Array();
 		var i = 0;
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		summary.reparented.forEach(function(reparent)
 		{
 			var parent = reparent.parentNode;
 			var sibling = reparent.previousSibling;
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
 			{
 				elements[i] = reparent;
@@ -323,14 +377,24 @@
 				siblings[i] = sibling;
 				i++;
 			}
+<<<<<<< HEAD
 
 		});
 
+=======
+			
+		});
+		 		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
  		summary.reordered.forEach(function(reorder)
 		{
  			var parent = reorder.parentNode;
 			var sibling = reorder.previousSibling;
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
 			{
 				elements[i] = reorder;
@@ -343,7 +407,11 @@
  		handleMovedElements(elements,parents,siblings);
  		
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function handleMovedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
@@ -351,7 +419,11 @@
 			var new_parent_id = "";
 			var new_prev_sibling_id = "";
 			var moved_node_id = elements[j]._internalNodeId;
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 			if(parents[j]._internalNodeId != undefined)
 			{
 				new_parent_id = parents[j]._internalNodeId;
@@ -360,11 +432,19 @@
 			{
 				new_prev_sibling_id = siblings[j]._internalNodeId;
 			}
+<<<<<<< HEAD
 
 			listener.onDOMMove(obj , new_parent_id, new_prev_sibling_id, moved_node_id , tabId);
 		}
 	}
 
+=======
+			
+			listener.onDOMMove(obj , new_parent_id, new_prev_sibling_id, moved_node_id , tabId);
+		}
+	}
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function handleAddedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
@@ -388,14 +468,22 @@
 			}
 		}
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function deleteDOM(summary)
 	{
 		var removed = new Array();
 		var i = 0;
 		summary.removed.forEach(function(removedEl)
 		{
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 			if(removedEl._internalNodeId != undefined)
 			{
 				removed[i] = removedEl._internalNodeId;
@@ -403,11 +491,19 @@
 				i++;
 			}
 	    });
+<<<<<<< HEAD
 
 		if(removed.length > 0)
 			listener.onDOMDelete(obj , removed, tabId);
 	}
 
+=======
+		
+		if(removed.length > 0)
+			listener.onDOMDelete(obj , removed, tabId);
+	}
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function attrChange(summary)
 	{
 		var node_id = new Array();
@@ -420,14 +516,22 @@
 		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
+<<<<<<< HEAD
 	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
+=======
+	            if(summary.attributeChanged[attrName][j].getAttribute(attrName))
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	            {
 		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            attr[i] = attrName;
 		            values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
 		            i++;
 	            }
+<<<<<<< HEAD
 	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
+=======
+	            else
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	            {
 	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            removed_attr[k] = attrName;
@@ -435,13 +539,21 @@
 	            }
 			}
 		});	
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 		if(node_id.length > 0)
 			listener.onDOMAttrChange(obj, node_id, attr, values, tabId);
 		if(removed_node_id.length > 0)
 			listener.onDOMAttrDelete(obj, removed_node_id, removed_attr, tabId);
 	}
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	function find(parent,elements)
 	{
 		for(var j=0; j<elements.length; j++)
@@ -453,7 +565,11 @@
 		}
 		return false;
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4c9b0b0b2337b0b23d4664b360bf73449295b926
 	/**
 	 * Update part of document, receive load as well as DOMContentLoad
 	 */

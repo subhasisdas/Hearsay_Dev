@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<project default="hearsayXtalk.xpi" basedir=".">
+
+  <target name="hearsayXtalk.xpi" >
+ 	<zip destfile="./hearsayXtalk.zip" basedir="./xpi/" />
+ 	<move file="./hearsayXtalk.zip" tofile="./hearsayXtalk.xpi"/>
+  </target>
+  
+</project>
