@@ -134,6 +134,14 @@ public class Message
 				}
 			}
 		}
+		
+		/*Retrieve CDATA here before sending it to dispatcher onReceive()?
+		sdas
+		CDATASection cdata = (CDATASection)msg;
+		String newmsg = cdata.getData();							
+		log(0,"Received CDATA data :"+ newmsg);
+		*/
+
 		return message;
 	}
 	
@@ -147,7 +155,7 @@ public class Message
 	 * output: String <cleanedhearsayMessage>
 	 * 
 	 * todo : will be permanently removed once javascript side takes care of filtering
-	 * */
+	 * 
 	public static String cleanInValidXMLCharacters(String in) {
         StringBuffer out = new StringBuffer(); // Used to hold the output.
         char current; // Used to reference the current character.
@@ -155,7 +163,7 @@ public class Message
         if (in == null || ("".equals(in))) return ""; // vacancy test.
         for (int i = 0; i < in.length(); i++) {
             current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
-            /*Valid Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]*/
+            /*Valid Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
             if ((current == 0x9) ||
                 (current == 0xA) ||
                 (current == 0xD) ||
@@ -168,16 +176,15 @@ public class Message
         String cleanOutput = output.replaceAll( "&([^;]+(?!(?:\\w|;)))", "&amp;$1" );
         return cleanOutput;
     }    
+    */
 	
 
 	public static Message parseXML(String hearsayMessage) throws Exception
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		InputSource is = new InputSource();
-		//String hearsayMsgValidEncoding = cleanInValidXMLCharacters(hearsayMessage);
-		//is.setCharacterStream(new StringReader(hearsayMsgValidEncoding));
 		is.setCharacterStream(new StringReader(hearsayMessage));
-		is.setEncoding("UTF-8");
+		//is.setEncoding("UTF-8");
 		
 		DocumentBuilder builder = factory.newDocumentBuilder();		
 		Document xmlDoc = builder.parse(is);
@@ -220,8 +227,10 @@ public class Message
 			for(String parameterValue : parameterValueList)
 			{
 				Element parameterValueElement = hearsayXMLMessage.createElement("parameterValue");
-				Text paramValueField = hearsayXMLMessage.createTextNode(parameterValue);
-				parameterValueElement.appendChild(paramValueField);
+				//sdas : CDATA section added
+				//Text paramValueField = hearsayXMLMessage.createTextNode(parameterValue);
+				Text CDATAparamValueField = hearsayXMLMessage.createCDATASection(parameterValue);
+				parameterValueElement.appendChild(CDATAparamValueField);
 				parameterValuesElement.appendChild(parameterValueElement);
 			}
 			parameterElement.appendChild(parameterValuesElement);

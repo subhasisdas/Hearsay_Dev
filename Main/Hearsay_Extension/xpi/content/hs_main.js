@@ -18,6 +18,7 @@ var activeTabBrowserHandler = null;
 var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
 //variable to valide XML characters chars : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
 var NOT_SAFE_IN_XML_1_0 = /[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/gm;
+var ALPHA_NUMERIC_UNDERSCORE = /^[A-Za-z0-9_]+$/;
 
 function log(msg) 
 {	
@@ -39,6 +40,23 @@ function ignoreCheckFunction(/*Node*/ node)
 	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 		return true;
 
+	/*if(node.nodeName[0].match("#") && !(node.nodeName.match("#text")))
+	{	
+		log("NoDE NAME ]] "+node.nodeName + " :: "+node.nodeName[0]);
+		return true;
+	}*/
+	/*if (node.attributes)
+		for (attribute in node.attributes)
+		{	
+			log("Out Attribute:" +attribute.nodeName);
+			if(attribute.nodeName[0].match("#"))
+			{	
+				log("In Attribute:" +attribute.nodeName);
+
+				//return true;
+			}
+		}*/
+
 	if(node.nodeType == 8)	// comment node
 		return true;
 
@@ -51,22 +69,49 @@ function ignoreCheckFunction(/*Node*/ node)
 	if(typeof(node) == "undefined")
 		return true;
 
-	log("in ignoreCheckFunction : checking validXML");
-
-	if(checkValidXMLChar(Node))
-		return true;
+	if(typeof(node.nodeName)){
+		log("this node has a defined node name");
+		IsAlphanumericNodeName(node.nodeName);
+	}
+//	if (typeof(node.attributes)){
+//		checkNodeAttributes(node);
+//	}
 
 	return false;
 }
+/*
+function checkNodeAttributes(Node node){
 
-function sanitizeStringForXML(theString) {
-	
+	log("checking node attribute names");
+	for (var i = 0; i < node.attributes.length; i++) 
+	{
+		var attribute = node.attributes[i];
+		if(IsAlphanumericNodeName(attribute.nodeName)){
+			node.removeAttribute(attribute);
+		}
+	}
+
+}*/
+
+function IsAlphanumericNodeName(/*String*/ nodeName){
+
+	if(!nodeName.match(/^[A-Za-z0-9_]+$/))
+	{
+		log("invalid nodename");
+		return true;
+	}
+
+	return false;
+} 
+
+/*function sanitizeStringForXML(theString) {
+
 	return theString.replace(NOT_SAFE_IN_XML_1_0, '');
 }
 
-function removeInvalidCharacters(/*Node*/ node){
-	
-	log("indide removeInvalidCharacters");
+function removeInvalidCharacters(Node node){
+
+	log("inside removeInvalidCharacters");
 	if (node.attributes) {
 		for (var i = 0; i < node.attributes.length; i++) {
 			var attribute = node.attributes[i];
@@ -79,50 +124,16 @@ function removeInvalidCharacters(/*Node*/ node){
 	if (node.childNodes) {
 		for (var i = 0; i < node.childNodes.length; i++) {
 			var childNode = node.childNodes[i];
-			if (childNode.nodeType == 1 /* ELEMENT_NODE */) {
+			if (childNode.nodeType == 1  ELEMENT_NODE ) {
 				removeInvalidCharacters(childNode);
-			} else if (childNode.nodeType == 3 /* TEXT_NODE */) {
+			} else if (childNode.nodeType == 3  TEXT_NODE ) {
 				if (childNode.nodeValue) {
 					childNode.nodeValue = sanitizeStringForXML(childNode.nodeValue);
 				}
 			}
 		}
 	}
-}
-
-function checkValidXMLChar(/*Node*/ node){
-
-	log("checking node name");
-	
-	if(node.nodeName){
-		if(node.nodeName.search(NOT_SAFE_IN_XML_1_0) != -1)
-			//node.nodeName = sanitizeStringForXML(node.nodeName);
-			return true;
-
-		if (node.attributes) {
-			log("checking node attribute names");
-			for (var i = 0; i < node.attributes.length; i++) {
-				var attribute = node.attributes[i];
-				if (attribute.nodeName.search(NOT_SAFE_IN_XML_1_0) != -1) {
-					//attribute.nodeName = sanitizeStringForXML(attribute.nodeName);
-					//return true;
-					log("removing an invalid attribute");
-					node.removeAttribute(attribute);
-					log("removed");
-				}
-			}
-			log("checking node attribute names done");
-		}
-		{
-			log("invoking removeInvalidCharacters");
-			removeInvalidCharacters(node);
-		}	
-		//return false;
-	}
-	//else return false;
-	
-	return false;
-} 
+}*/
 
 function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
 {
@@ -266,13 +277,21 @@ var listener =
 		},
 		onReceive:		/*void*/function(/*hsTransport*/ handle, /*String*/message) 
 		{
+			//log("CDATA message received from server =>" + message);
 			var msg = hsMessage.load(message);
 			//log("Listener onReceive msg="+message);
 			switch(msg.getType())
 			{
 			case hsMsgType.TTS_SPEAK:
-				log("Receive TTS_SPEAK message : " + message);
+				//log("Receive TTS_SPEAK message : " + message);
 				var text = msg.getParameter("text");
+				log("CDATA text =>"+text);
+				//var temp = text;
+				//,<![CDATA[Home]]>,
+				//var temp1 = temp.toString();
+				//temp1.replace(/\<\!\[CDATA\[(.+\]{0}\>{0})\]\]\>/g,"");
+				//log("CDATA clean text =>"+temp1);
+				
 				var text_id = msg.getParameter("text_id");				
 				text = text && text.length>0 && text[1];				
 				if(text)
@@ -283,18 +302,18 @@ var listener =
 				break;
 			case hsMsgType.TTS_CANCEL:
 				// TODO: implement it
-				log("Receive TTS_CANCEL message : "+ message);
+				//log("Receive TTS_CANCEL message : "+ message);
 				var text_id = msg.getParameter("text_id");
 				text_id = text_id && text_id.length>0 && text_id[1];
 				tts.cancel(text_id);
 				break;
 			case hsMsgType.SET_HIGHLIGHT:
-				log("hsMsgType.SET_HIGHLIGHT: Received");
+				//log("hsMsgType.SET_HIGHLIGHT: Received");
 				var tab = tabMap[msg.getId()];
-				log("tab"+tab+":"+msg.getParameter("node_id"));
+				//log("tab"+tab+":"+msg.getParameter("node_id"));
 				if(tab)
 					tab.highlight(msg.getParameter("node_id"));
-				log("hsMsgType.SET_HIGHLIGHT: OK")
+				//log("hsMsgType.SET_HIGHLIGHT: OK")
 				break;
 			default:
 				// TODO: print error message to console with message description
@@ -314,11 +333,11 @@ var listener =
 		{
 
 			// TODO: send hsMsgType.KEY message
-			log(" onKeyPress message sent!"+ key);
+			//log(" onKeyPress message sent!"+ key);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 			if(activeTabId)
 			{
-				log(" onKeyPress message sent!");
+				//log(" onKeyPress message sent!");
 				if(key && key.length>0)	
 				{
 					var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
@@ -332,17 +351,17 @@ var listener =
 
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
-			log(" onClick message sent!"+ button);
+			//log(" onClick message sent!"+ button);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 
 			var nodeId = activeTabBrowserHandler.getNodeId(clicked_node);
-			log("Node Id of clicked node is : " + nodeId);
+			//log("Node Id of clicked node is : " + nodeId);
 			if(nodeId != null && activeTabId != null)
 			{
-				log("onClick message sent!");
+				//log("onClick message sent!");
 				var activeTabMessage = hsMessage.create(hsMsgType.MOUSE, activeTabId);
 				activeTabMessage.setParameter("id", [nodeId]);
-				log("msg sent is :"+activeTabMessage.toXMLString());
+				//log("msg sent is :"+activeTabMessage.toXMLString());
 				var nodeBeingClicked = activeTabBrowserHandler.getNode(nodeId);
 				transport.send(activeTabMessage.toXMLString());
 			}
@@ -389,6 +408,7 @@ var listener =
 		},
 		onDOMAttrChange: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*String[]*/ values, /*long*/ tabId)
 		{
+			//check for null values of attr, values
 			if(tabId)
 			{
 				var updateAttrMessage = hsMessage.create(hsMsgType.UPDATE_ATTR, tabId);
@@ -400,6 +420,7 @@ var listener =
 		},
 		onDOMAttrDelete: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*long*/ tabId)
 		{
+			//check for null values of attr
 			if(tabId)
 			{
 				var deleteAttrMessage = hsMessage.create(hsMsgType.DELETE_ATTR, tabId);

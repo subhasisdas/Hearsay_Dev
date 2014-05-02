@@ -3,6 +3,8 @@ package org.Hearsay_Server.server;
 
 import org.Hearsay_Server.interfaces.IChannelListener;
 import org.Hearsay_Server.interfaces.IMessageChannel;
+import org.w3c.dom.CDATASection;
+import org.xml.sax.SAXParseException;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -22,42 +24,48 @@ public class MessageChannel extends Loggable implements IMessageChannel
 	private final IChannelListener listener;
 	private final Thread thread;
 	private final int id;
-	
-	
+
+
 	public MessageChannel(Socket sock, IChannelListener l) throws SocketException
 	{
 		SetLinePrefix("Socket#"+getId()+">");
 		SetLogLevel(0);
-		
+
 		socket = sock;
 		listener = l;
 		id = socket.getPort();
-		
+
 		socket.setTcpNoDelay(true);
-		
+
 		thread = new Thread()
 		{
 			@Override
 			public void run()
 			{
+				String message = "";
 				try 
 				{
 					for(;;)  
 					{
-						final String message = receiveMessage();
+						message = receiveMessage();
 						//log(1,"Received message : " + message);
 						if(message == null)
 							break;
-	
+
 						if(!message.isEmpty()) 
 						{	// message not read yet
-							log(1, " : Message Receive() works : message :"/*+message*/);	
-							//listener.onReceive
-								//log(1,"Received message for parsing : " + message);
-								listener.onReceive(MessageChannel.this, Message.parseXML(message));
+							log(0, " : Message Receive() works : message :"+message);	
+							listener.onReceive(MessageChannel.this, Message.parseXML(message));
 						}
 					}
 				} 
+				catch(SAXParseException saxEx)
+				{
+					int pos = saxEx.getColumnNumber();
+					if(pos >= 0)
+						log(0, "Error!!!: ...."+message.substring(pos));
+					saxEx.printStackTrace();
+				}
 				catch (Exception e) 
 				{
 					log(0,"An error was encountered when parsing the message received from extension : " + e.getLocalizedMessage());
@@ -71,21 +79,21 @@ public class MessageChannel extends Loggable implements IMessageChannel
 		};
 		thread.start();
 	}
-	
+
 	@Override
 	public synchronized void send(Message msg) 
 	{
 		try
 		{
-		final String smsg = msg.writeXML();
-		//log(1,"Sending Message : " + smsg);
-		final byte[] msgb = smsg.getBytes("UTF-8");
-		String msg_len = String.valueOf(msgb.length);
-		msg_len = "00000000".substring(msg_len.length())+msg_len;
-		//log(1,"Message length : " + msg_len + "::" + msgb.toString());
-		final byte[] msg_lenb = msg_len.getBytes("UTF-8");
-		socket.getOutputStream().write(msg_lenb);
-		socket.getOutputStream().write(msgb);
+			final String smsg = msg.writeXML();
+			//log(1,"Sending Message : " + smsg);
+			final byte[] msgb = smsg.getBytes("UTF-8");
+			String msg_len = String.valueOf(msgb.length);
+			msg_len = "00000000".substring(msg_len.length())+msg_len;
+			//log(1,"Message length : " + msg_len + "::" + msgb.toString());
+			final byte[] msg_lenb = msg_len.getBytes("UTF-8");
+			socket.getOutputStream().write(msg_lenb);
+			socket.getOutputStream().write(msgb);
 		}
 		catch(Exception e)
 		{
@@ -100,10 +108,10 @@ public class MessageChannel extends Loggable implements IMessageChannel
 		newTextId++;
 		return nextTextId;
 	}
-	*/
+	 */
 	@Override
 	public int getId()	{ return id;	}
-	
+
 	@Override
 	public void release()
 	{
@@ -113,7 +121,7 @@ public class MessageChannel extends Loggable implements IMessageChannel
 		thread.interrupt();
 		//TODO: The thread DOES NOT LISTEN TO INTERRUPTS and uses a BLOCKING CALL to read from the input stream that DOES NOT listen to interrupts
 	}
-	
+
 	private boolean	_ReadLengthMode = true;
 	private int		_readPtr = 0;
 	private byte[]	_readBuf = new byte[8];

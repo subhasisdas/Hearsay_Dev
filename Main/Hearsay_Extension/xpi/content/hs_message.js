@@ -37,7 +37,7 @@ var hsMessage = (function()
 				setPayload:	  /*void*/					function(/*Node*/ root) { payload = root; },
 				toXMLString:  /*String*/				function()
 				{
-					var xmldoc = document.implementation.createDocument("", "", null);
+					var xmldoc = document.implementation.createDocument(null, "", null);
 					var xmlroot = xmldoc.appendChild(xmldoc.createElement(HS_MSG_TAG));
 					var idNode = xmldoc.createElement(HS_MSG_ID);
 					idNode.appendChild(xmldoc.createTextNode(tabId));

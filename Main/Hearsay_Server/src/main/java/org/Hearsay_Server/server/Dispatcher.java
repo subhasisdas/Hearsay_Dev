@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.w3c.dom.CDATASection;
 import org.w3c.dom.Node;
 import org.Hearsay_Server.interfaces.ICommunicatorListener;
 import org.Hearsay_Server.interfaces.IChannelListener;

@@ -281,9 +281,13 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 				else {
 					try
 					{
+					    var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
+								createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+					    converter.charset = "UTF-8";
+					    message = converter.ConvertFromUnicode(message);
 						var strbytes = _hstFormatMessageLength(message);
 						_OutStream.write(strbytes, 8);
-						log(message);
+						//log(message);
 						_OutStream.write(message, message.length);
 					}
 					catch(e)

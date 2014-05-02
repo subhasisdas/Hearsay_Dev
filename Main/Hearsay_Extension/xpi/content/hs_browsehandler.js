@@ -168,6 +168,9 @@
 			for(var x=0; x < htmlDocNode.attributes.length ; x++)
 			{
 				var attributeNode = htmlDocNode.attributes[x];
+				
+				//put attribute check here
+								
 				xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
 			}
 		}
@@ -197,8 +200,13 @@
 				{
 					var newTextElement = xmlDocument.createElement("textelement");
 					newTextElement.setAttribute("node_id" , internalNodeId);
-					var newtextNode = xmlDocument.createTextNode(documentRootNode.nodeValue);
-					newTextElement.appendChild(newtextNode);
+					//var newtextNode = xmlDocument.createTextNode(documentRootNode.nodeValue);
+					//newTextElement.appendChild(newtextNode);
+					var newCDataNode = xmlDocument.createCDATASection(documentRootNode.nodeValue);
+										
+					newTextElement.appendChild(newCDataNode);
+					
+					log("hs_browserhandler CDATA : ]]" + (new XMLSerializer().serializeToString(newTextElement)));
 					return newTextElement;
 				}            
 			}
@@ -267,7 +275,7 @@
 		var xmlDocument = br.contentDocument.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
 		//log(br.contentDocument.body.hasChildNodes());
 		var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
-		log("This was the payload generated : " + xmlPayload);
+		//log("This was the payload generated : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
 
@@ -420,23 +428,14 @@
 		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
-<<<<<<< Updated upstream
 	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
-=======
-	            if((summary.attributeChanged[attrName][j].getAttribute(attrName))
-	            	&& (summary.attributeChanged[attrName][j]._internalNodeId))
->>>>>>> Stashed changes
 	            {
 		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            attr[i] = attrName;
 		            values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
 		            i++;
 	            }
-<<<<<<< Updated upstream
 	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
-=======
-	            else if (summary.attributeChanged[attrName][j]._internalNodeId)
->>>>>>> Stashed changes
 	            {
 	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
 		            removed_attr[k] = attrName;

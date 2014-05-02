@@ -8,6 +8,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -78,7 +79,11 @@ public class TabHandler extends Loggable implements ITabHandler
 		for(int i=0;i<nodeIds.size();i++)
 		{
 			Element current = (Element)getNodebyID(document.getFirstChild(),nodeIds.get(i).toString());
+			
+			//sdas : check if null check is required
+			//if(values.get(i) !=null){
 			current.setAttribute(attr.get(i), values.get(i));
+			//}
 
 			//check if iterator is not null and the node attr being changed is inside the sub-tree
 			if(iterator.getPos()!=null && findIfPreDecessor(nodeMap.get(nodeIds.get(i)), iterator.getPos()))
@@ -101,6 +106,7 @@ public class TabHandler extends Loggable implements ITabHandler
 
 		document.importNode(updateTree, true);
 		document.adoptNode(updateTree);	        	
+		
 		Node appendedSubTree=appendSubTree(document.getFirstChild(), updateTree, parentID, siblingID);
 
 		if(appendedSubTree!=null)
@@ -473,8 +479,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
 		ArrayList<String> textParameter = new ArrayList<String>();
 		textParameter.add(nodeValueToSend);
-
-		log(0,"[TabHandler Server] : Node value to be sent :"+ nodeValueToSend);
+		//log(0,"[TabHandler Server] : Node value to be sent :"+ nodeValueToSend);
 
 		ArrayList<String> textIdParameter = new ArrayList<String>();
 
@@ -483,7 +488,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		textIdParameter.add(Long.toString(text_Id));
 		ttsSpeakMessage.getArguments().put("text", textParameter);
 		ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
-		log(0,"[TabHandler Server Speak] : text- "+ textParameter +"   :: text_id- "+ textIdParameter );
+		//log(0,"[TabHandler Server Speak] : text- "+ textParameter +"   :: text_id- "+ textIdParameter );
 		channel.send(ttsSpeakMessage);
 	}	
 
@@ -693,6 +698,7 @@ public class TabHandler extends Loggable implements ITabHandler
 			{
 				Node nodeToSend = iterator.getPos();
 				String ttsDoneNodeValueToSend = nodeToSend.getTextContent();
+				log(0,"[textvalue]"+ttsDoneNodeValueToSend);
 
 				//nodeId = getNodeId(nodeToSend);
 
