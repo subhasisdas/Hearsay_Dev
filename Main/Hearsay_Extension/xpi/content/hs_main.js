@@ -393,24 +393,24 @@ var listener =
 		},
 		onDOMAttrChange: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*String[]*/ values, /*long*/ tabId)
 		{
-			//check for null values of attr, values
-			if(tabId && attr && values)
+			if(tabId)
 			{
 				var updateAttrMessage = hsMessage.create(hsMsgType.UPDATE_ATTR, tabId);
 				updateAttrMessage.setParameter("node_id",node_id);
 				updateAttrMessage.setParameter("attr",attr);
 				updateAttrMessage.setParameter("values",values);
+				console.log("Attr Change");
 				transport.send(updateAttrMessage.toXMLString());
 			}
 		},
 		onDOMAttrDelete: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*long*/ tabId)
 		{
-			//check for null values of attr
-			if(tabId && attr)
+			if(tabId)
 			{
 				var deleteAttrMessage = hsMessage.create(hsMsgType.DELETE_ATTR, tabId);
 				deleteAttrMessage.setParameter("node_id",node_id);
 				deleteAttrMessage.setParameter("attr",attr);
+				console.log("Attr delete");
 				transport.send(deleteAttrMessage.toXMLString());
 			}
 		},
@@ -424,15 +424,32 @@ var listener =
 				moveDOMMessage.setParameter("node_id", [moved_node_id]);
 				moveDOMMessage.setParameter("parent_id", [new_parent_id]);
 				moveDOMMessage.setParameter("sibling_id", [new_prev_sibling_id]);
+				console.log("Move");
 				transport.send(moveDOMMessage.toXMLString());
 			}
 		},
 
 		// onValueChange
+		
+		onValueChange: /*void*/function(/*hsBrowserHandler*/ handler, /*String*/ node_id, /*String*/ value)
+		{
+			log('onalueChange invoked : ' + handler.getBrowser());
+			log("Tab id is : " + tabId);
+			if(tabId)
+			{
+				var changeValueMessage = hsMessage.create(hsMsgType.CHANGE_VALUE, tabId);
+				console.log("node id:"+node_id+" value:"+value);
+				changeValueMessage.setParameter("node_id", [node_id]);
+				changeValueMessage.setParameter("value", [value]);
+				console.log("Change Value");
+				transport.send(changeValueMessage.toXMLString());
+			}
+		}
 };
 
 function onLoad()
 {
+	console.log("IN LOAD");
 	window.removeEventListener("load", onLoad, false);
 	window.addEventListener("unload", onUnload, false);
 	transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
@@ -441,6 +458,7 @@ function onLoad()
 //do not forget to release all resources!
 function onUnload()
 {
+	console.log("IN UNLOAD");
 	window.removeEventListener("unload", onUnload, false);
 	transport.release();
 	// TODO: release all: transport, mouse, keyboard, listeners ....

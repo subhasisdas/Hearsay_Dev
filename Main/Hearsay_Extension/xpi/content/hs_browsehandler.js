@@ -28,56 +28,84 @@
 		/*long*/ tabId, /*custom filter ignoreCheckFn(Node to check)*/ ignoreCheckFunction)
 {	
 	var observer;
-	var frameobserver = {};
+	var frameobserver = {}; // To store all the frame observers
 	var k = 0;
-
+	
 	//handling normal content of the browser 'without' frames
-	function initializeDocument()
-	{
-		observer = new MutationSummary({
-			callback: handleChanges,
-			rootNode: br.contentDocument,
-			queries: [{all:true}]
-		});
+	function initializeDocument(doc)
+	{		
+		docToSend = doc;
 		newNodeId = 1;
-		docToSend = br.contentDocument;
-		initializeNodeMap(br.contentDocument.documentElement);
-		var xmlDocument = br.contentDocument.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
+		
+		initializeNodeMap(docToSend.documentElement);
+		var xmlDocument = docToSend.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
 		var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
 		listener.onDOMInit(obj , xmlPayload, tabId);
-	}
-
-	//handling frames
-	function initializeFrameDocument()
-	{
-		for (var j = br.contentDocument.defaultView.frames.length-1; j >= 0; j--)
-		{
-			docToSend = br.contentDocument.defaultView.frames[j].document;
-			//array of mutation summary observers for the frames
-			frameobserver[k] = new MutationSummary({
-				callback: handleChanges,
-				rootNode: docToSend,
-				queries: [{all:true}]
+		
+		//observer for the root document
+		observer = new MutationSummary({
+			  callback: handleChanges,
+			  rootNode: docToSend,
+			  queries: [{all:true}]
 			});
-			k++;
-			if(!(docToSend.documentElement._internalNodeId in nodeMap))
+	}
+	
+	//handling frames
+	function handle_frames(doc)
+	{
+		for (var j = 0; j < doc.defaultView.frames.length; j++)
+		{
+			frame = doc.defaultView.frames[j];
+			
+			initializeFrameDocument(frame);
+			
+			//array of mutation summary observers for the frames
+			var temp = new MutationSummary({
+				  callback: handleChanges,
+				  rootNode: frame.document,
+				  queries: [{all:true}]
+				});
+			
+			frameobserver[frame.frameElement._internalNodeId] = temp;
+			
+			//checking if the frame contains frames within itself
+			if (frame.document && frame.document.defaultView.frames && frame.document.defaultView.frames.length > 0 )
 			{
-				initializeNodeMap(docToSend.documentElement);
-				var xmlDocument = docToSend.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
-				var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
-				var parent = br.contentDocument.defaultView.frames[j].frameElement.parentNode;
-				var parent_id = "";
-				if(parent != null && parent._internalNodeId != undefined)
-				{
-					parent_id = br.contentDocument.defaultView.frames[j].frameElement.parentNode._internalNodeId;
-				}
-				listener.onDOMUpdate(obj , parent_id, "", xmlPayload, tabId);
+				handle_frames(frame.document);
 			}
 		}
-
+	}
+		
+	//initialize Frame Document
+	function initializeFrameDocument(frame)
+	{
+		var parent = frame.frameElement;
+		if(frame.document && parent && parent._internalNodeId 
+			&& frame.document.documentElement && !(frame.document.documentElement._internalNodeId in nodeMap)
+			&& (frame.document.readyState =="interactive" || frame.document.readyState =="complete"))
+		{
+				addEventListeners(frame.document.documentElement);
+				initializeNodeMap(frame.document.documentElement);
+				var xmlDocument = frame.document.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
+				var xmlPayload = createXMLPayload(xmlDocument, frame.document.documentElement);
+				if(parent._internalNodeId)
+					listener.onDOMUpdate(obj , parent._internalNodeId, "", xmlPayload, tabId);
+		}
 	}
 
-	//common functionlity
+	/*helper function to print the node Map*/
+	function printNodeMap()
+	{
+		var count = 0;
+		for (id in nodeMap)
+		{
+			count++;
+			console.log(id);
+		}
+		console.log("Total No. of ids:"+count);
+		
+	}
+	
 	function handleLoad(event)
 	{
 		var eventDocument = event.target;
@@ -85,23 +113,28 @@
 		{
 			if(docToSend == null)
 			{
-				initializeDocument();
-			}
-
+				addEventListeners(br.contentDocument.documentElement);
+				initializeDocument(br.contentDocument);
+			}	
 		}
 		else
 		{
-			initializeFrameDocument();	
+			handle_frames(br.contentDocument);
 		}
 	}
 
 	function handlePageHide(event)
 	{
 		docToSend = null;
-		// Release Mutation observer??
+		/*
+		 * Release all the observers on that page
+		 * 
+		 * */
 		delete observer;
-		frameobserver = {};
+		for (frame in frameobserver)
+			delete frame;
 		delete frameobserver;
+		delete temp;
 	}
 
 	var newNodeId = 0;
@@ -110,10 +143,23 @@
 
 	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
 
+	function ClearFrameHighlighting(doc)
+	{
+		for(var i=0; i<doc.defaultView.frames.length; i++)
+		{
+			frame = doc.defaultView.frames[i];
+			ClearHighlightsDoc(frame.document);
+			if (frame.document && frame.document.defaultView.frames && frame.document.defaultView.frames.length > 0 )
+			{
+				ClearFrameHighlighting(frame.document);
+			}
+		}
+	}
+	
 	var obj = {
 			highlight: function(/*String[]*/ ids)
 			{
-				// Clear current highlightning, 
+				// Clear current highlighting, 
 				// highlight new set of nodes				         
 				for (var index in ids) {
 					//We do not want to highlight entire page
@@ -122,14 +168,11 @@
 					else
 					{
 						// Clear current highlighting,
-
-						ClearHighlightsDoc(br.contentDocument);		
-
-						for(var i=0; i<br.contentDocument.defaultView.frames.length; i++)
-						{
-							ClearHighlightsDoc(br.contentDocument.defaultView.frames[i].document);
-						}
-
+						
+						ClearHighlightsDoc(br.contentDocument);
+						
+						ClearFrameHighlighting(br.contentDocument);
+						
 						var nodeObject = this.getNode(ids[index]);						                                              
 						SetHighlightControl(nodeObject);
 					}
@@ -161,6 +204,7 @@
 			getBrowser:function() { return br; }
 	};
 
+
 	function copyAttributes(htmlDocNode, xmlDocNode)
 	{
 		if(htmlDocNode.hasAttributes())
@@ -169,7 +213,7 @@
 			{
 				var attributeNode = htmlDocNode.attributes[x];
 
-				log("Print the attr ->"+attributeNode.value);
+				//log("Print the attr ->"+attributeNode.value);
 
 				//checks if an element node
 				//check if css is there
@@ -230,7 +274,7 @@
 					var newCDataNode = xmlDocument.createCDATASection(documentRootNode.nodeValue);
 					newTextElement.appendChild(newCDataNode);
 
-					log("hs_browserhandler CDATA : ]]" + (new XMLSerializer().serializeToString(newTextElement)));
+					//log("hs_browserhandler CDATA : ]]" + (new XMLSerializer().serializeToString(newTextElement)));
 					return newTextElement;
 				}            
 			}
@@ -302,178 +346,174 @@
 		//log("This was the payload generated : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
-
+	
 	function handleChanges(summaries)
 	{
 		var summary = summaries[0];
-
+		
 		updateDOM(summary);
 		deleteDOM(summary);
 		attrChange(summary);
 		moveDOM(summary);
 	}
-
-	function updateDOM(summary)
+	
+	function  updateDOM(summary)
 	{
-		var elements = new Array();
-		var parents = new Array();
-		var siblings = new Array();
-		var i = 0;
-
+		var elements = [];
+		var parents = [];
+		var siblings = [];
+		
 		summary.added.forEach(function(element)
-				{					
+		{					
 			var parent = element.parentNode;
 			var sibling = element.previousSibling;
-			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
+			if(parent && parent._internalNodeId && !find(parent,elements))
 			{
-				elements[i] = element;
-				parents[i] = parent;
-				siblings[i] = sibling;
-				i++;
+				elements.push(element);
+				parents.push(parent);
+				siblings.push(sibling);
 			}
-				}); 
-
+		}); 
+		
 		handleAddedElements(elements,parents,siblings);
 	}
 
 	function moveDOM(summary)
 	{
-		var elements = new Array();
-		var parents = new Array();
-		var siblings = new Array();
-		var i = 0;
-
+		var elements = [];
+		var parents = [];
+		var siblings = [];
+		
 		summary.reparented.forEach(function(reparent)
-				{
+		{
 			var parent = reparent.parentNode;
 			var sibling = reparent.previousSibling;
-
-			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
+			
+			if(parent && parent._internalNodeId && !find(parent,elements))
 			{
-				elements[i] = reparent;
-				parents[i] = parent;
-				siblings[i] = sibling;
-				i++;
+				elements.push(reparent);
+				parents.push(parent);
+				siblings.push(sibling);
 			}
-
-				});
-
-		summary.reordered.forEach(function(reorder)
-				{
-			var parent = reorder.parentNode;
+			
+		});
+		 		
+ 		summary.reordered.forEach(function(reorder)
+		{
+ 			var parent = reorder.parentNode;
 			var sibling = reorder.previousSibling;
-
-			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
+			
+			if(parent && parent._internalNodeId && !find(parent,elements))
 			{
-				elements[i] = reorder;
-				parents[i] = parent;
-				siblings[i] = sibling;
-				i++;
+				elements.push(reorder);
+				parents.push(parent);
+				siblings.push(sibling);
 			}
-				});
-
-		handleMovedElements(elements,parents,siblings);
-
+		});
+ 		
+ 		handleMovedElements(elements,parents,siblings);
+ 		
 	}
-
+	
 	function handleMovedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
 		{
-			var new_parent_id = "";
 			var new_prev_sibling_id = "";
 			var moved_node_id = elements[j]._internalNodeId;
-
-			if(parents[j]._internalNodeId != undefined)
+			
+			if(parents[j]._internalNodeId)
 			{
-				new_parent_id = parents[j]._internalNodeId;
+				var new_parent_id = parents[j]._internalNodeId;
 			}
-			if(siblings[j] != null && siblings[j]._internalNodeId != undefined)
+			if(siblings[j] && siblings[j]._internalNodeId)
 			{
 				new_prev_sibling_id = siblings[j]._internalNodeId;
 			}
-
-			listener.onDOMMove(obj , new_parent_id, new_prev_sibling_id, moved_node_id , tabId);
+			if(new_parent_id)
+				listener.onDOMMove(obj , new_parent_id, new_prev_sibling_id, moved_node_id , tabId);
 		}
 	}
-
+	
 	function handleAddedElements(elements,parents,siblings)
 	{
 		for(var j = 0; j < elements.length; j++)
 		{
-			var parent_id = "";
 			var prev_sibling_id = "";	
 			initializeNodeMap(elements[j]);
 			var xmlDocument = br.contentDocument.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
 			var xmlPayload = createXMLPayload(xmlDocument, elements[j]);
-			if(xmlPayload != null)
+			if(xmlPayload)
 			{
-				if(parents[j]._internalNodeId != undefined)
+				if(parents[j]._internalNodeId)
 				{
-					parent_id = parents[j]._internalNodeId;
+					var parent_id = parents[j]._internalNodeId;
 				}
-				if(siblings[j] != null && siblings[j]._internalNodeId != undefined)
-				{
+				if(siblings[j] != null && siblings[j]._internalNodeId)
+				{ 
 					prev_sibling_id = siblings[j]._internalNodeId;
 				}
-				listener.onDOMUpdate(obj , parent_id, prev_sibling_id, xmlPayload, tabId);
+				if (parent_id)
+					listener.onDOMUpdate(obj , parent_id, prev_sibling_id, xmlPayload, tabId);
 			}
 		}
 	}
-
+	
 	function deleteDOM(summary)
 	{
-		var removed = new Array();
-		var i = 0;
+		var removed = [];
 		summary.removed.forEach(function(removedEl)
-				{
-
-			if(removedEl._internalNodeId != undefined)
+		{
+			if(removedEl._internalNodeId)
 			{
-				removed[i] = removedEl._internalNodeId;
-				delete nodeMap[removed[i]];
-				i++;
+				removed.push(removedEl._internalNodeId);
+				delete frameobserver[removedEl._internalNodeId];
+				delete nodeMap[removedEl._internalNodeId];
 			}
-				});
-
+	    });
+		
 		if(removed.length > 0)
 			listener.onDOMDelete(obj , removed, tabId);
 	}
-
+	
 	function attrChange(summary)
 	{
-		var node_id = new Array();
-		var attr = new Array();
-		var values = new Array();
-		var removed_node_id = new Array();
-		var removed_attr = new Array();
-		var i = 0, k = 0;
+		var node_id = [];
+		var attr = [];
+		var values = [];
+		var removed_node_id = [];
+		var removed_attr = [];
+		var k = 0;
 		Object.keys(summary.attributeChanged).forEach(function(attrName)
-				{
+		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
-				if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
-				{
-					node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
-					attr[i] = attrName;
-					values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
-					i++;
-				}
-				else if(summary.attributeChanged[attrName][j]._internalNodeId)
-				{
-					removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
-					removed_attr[k] = attrName;
-					k++;
-				}
+	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) &&
+	            		summary.attributeChanged[attrName][j]._internalNodeId)
+	            {
+		            node_id.push(summary.attributeChanged[attrName][j]._internalNodeId);
+		            attr.push(attrName);
+		            values.push(summary.attributeChanged[attrName][j].getAttribute(attrName));
+	            }
+	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
+	            {
+	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
+		            removed_attr[k] = attrName;
+		            k++;
+	            }
 			}
-				});	
-
+		});	
+		
 		if(node_id.length > 0)
 			listener.onDOMAttrChange(obj, node_id, attr, values, tabId);
 		if(removed_node_id.length > 0)
 			listener.onDOMAttrDelete(obj, removed_node_id, removed_attr, tabId);
 	}
-
+	
+	/*
+	 * Recursively checking for the root node of te sub-tree which has been modified
+	 * 
+	 * */
 	function find(parent,elements)
 	{
 		for(var j=0; j<elements.length; j++)
@@ -485,11 +525,24 @@
 		}
 		return false;
 	}
-
+	
+	function addEventListeners(doc)
+	{
+	    doc.addEventListener("change", onChangeValue, false);
+	    doc.addEventListener("change", onChangeValue, true);
+	    doc.addEventListener("input", onChangeValue, false);
+	    doc.addEventListener("input", onChangeValue, true);
+	}
+	
+	function onChangeValue(e)
+	{
+		console.log("Value changed for:"+e.target+" having node id: "+e.target._internalNodeId+" with value: "+e.target.value);
+		listener.onValueChange(obj, e.target._internalNodeId, e.target.value, tabId);
+	}
+	
 	/**
 	 * Update part of document, receive load as well as DOMContentLoad
 	 */
-
 	br.addEventListener('load', handleLoad, false);
 	br.addEventListener('DOMContentLoaded', handleLoad, false);
 	br.addEventListener('pageshow', handleLoad, false);
