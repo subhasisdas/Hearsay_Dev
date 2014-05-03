@@ -35,9 +35,9 @@
 	function initializeDocument()
 	{
 		observer = new MutationSummary({
-			callback: handleChanges,
-			rootNode: br.contentDocument,
-			queries: [{all:true}]
+		  callback: handleChanges,
+		  rootNode: br.contentDocument,
+		  queries: [{all:true}]
 		});
 		newNodeId = 1;
 		docToSend = br.contentDocument;
@@ -55,10 +55,10 @@
 			docToSend = br.contentDocument.defaultView.frames[j].document;
 			//array of mutation summary observers for the frames
 			frameobserver[k] = new MutationSummary({
-				callback: handleChanges,
-				rootNode: docToSend,
-				queries: [{all:true}]
-			});
+				  callback: handleChanges,
+				  rootNode: docToSend,
+				  queries: [{all:true}]
+				});
 			k++;
 			if(!(docToSend.documentElement._internalNodeId in nodeMap))
 			{
@@ -168,15 +168,10 @@
 			for(var x=0; x < htmlDocNode.attributes.length ; x++)
 			{
 				var attributeNode = htmlDocNode.attributes[x];
-
+				
 				//put attribute check here
-				if(attributeNode.nodeName.match(/^[A-Za-z0-9_]+$/))	
-					xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
-				else
-				{
-					log("Invalid attribute name. attribute not copied -> "+attributeNode.nodeName);
-					continue;
-				}
+								
+				xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
 			}
 		}
 		return xmlDocNode;
@@ -208,9 +203,9 @@
 					//var newtextNode = xmlDocument.createTextNode(documentRootNode.nodeValue);
 					//newTextElement.appendChild(newtextNode);
 					var newCDataNode = xmlDocument.createCDATASection(documentRootNode.nodeValue);
-
+										
 					newTextElement.appendChild(newCDataNode);
-
+					
 					log("hs_browserhandler CDATA : ]]" + (new XMLSerializer().serializeToString(newTextElement)));
 					return newTextElement;
 				}            
@@ -302,7 +297,7 @@
 		var i = 0;
 
 		summary.added.forEach(function(element)
-				{					
+		{					
 			var parent = element.parentNode;
 			var sibling = element.previousSibling;
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
@@ -312,7 +307,7 @@
 				siblings[i] = sibling;
 				i++;
 			}
-				}); 
+		}); 
 
 		handleAddedElements(elements,parents,siblings);
 	}
@@ -325,7 +320,7 @@
 		var i = 0;
 
 		summary.reparented.forEach(function(reparent)
-				{
+		{
 			var parent = reparent.parentNode;
 			var sibling = reparent.previousSibling;
 
@@ -337,11 +332,11 @@
 				i++;
 			}
 
-				});
+		});
 
-		summary.reordered.forEach(function(reorder)
-				{
-			var parent = reorder.parentNode;
+ 		summary.reordered.forEach(function(reorder)
+		{
+ 			var parent = reorder.parentNode;
 			var sibling = reorder.previousSibling;
 
 			if(parent != null && parent._internalNodeId != undefined && !find(parent,elements))
@@ -351,10 +346,10 @@
 				siblings[i] = sibling;
 				i++;
 			}
-				});
-
-		handleMovedElements(elements,parents,siblings);
-
+		});
+ 		
+ 		handleMovedElements(elements,parents,siblings);
+ 		
 	}
 
 	function handleMovedElements(elements,parents,siblings)
@@ -407,7 +402,7 @@
 		var removed = new Array();
 		var i = 0;
 		summary.removed.forEach(function(removedEl)
-				{
+		{
 
 			if(removedEl._internalNodeId != undefined)
 			{
@@ -415,7 +410,7 @@
 				delete nodeMap[removed[i]];
 				i++;
 			}
-				});
+	    });
 
 		if(removed.length > 0)
 			listener.onDOMDelete(obj , removed, tabId);
@@ -430,24 +425,24 @@
 		var removed_attr = new Array();
 		var i = 0, k = 0;
 		Object.keys(summary.attributeChanged).forEach(function(attrName)
-				{
+		{
 			for(var j = 0; j < summary.attributeChanged[attrName].length; j++)
 			{				
-				if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
-				{
-					node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
-					attr[i] = attrName;
-					values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
-					i++;
-				}
-				else if(summary.attributeChanged[attrName][j]._internalNodeId)
-				{
-					removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
-					removed_attr[k] = attrName;
-					k++;
-				}
+	            if(summary.attributeChanged[attrName][j].getAttribute(attrName) && summary.attributeChanged[attrName][j]._internalNodeId)
+	            {
+		            node_id[i] = summary.attributeChanged[attrName][j]._internalNodeId;
+		            attr[i] = attrName;
+		            values[i] = summary.attributeChanged[attrName][j].getAttribute(attrName);
+		            i++;
+	            }
+	            else if(summary.attributeChanged[attrName][j]._internalNodeId)
+	            {
+	            	removed_node_id[k] = summary.attributeChanged[attrName][j]._internalNodeId;
+		            removed_attr[k] = attrName;
+		            k++;
+	            }
 			}
-				});	
+		});	
 
 		if(node_id.length > 0)
 			listener.onDOMAttrChange(obj, node_id, attr, values, tabId);

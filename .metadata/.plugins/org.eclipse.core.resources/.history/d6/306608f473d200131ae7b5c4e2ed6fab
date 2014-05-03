@@ -173,10 +173,7 @@
 				if(attributeNode.nodeName.match(/^[A-Za-z0-9_]+$/))	
 					xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
 				else
-				{
-					log("Invalid attribute name. attribute not copied -> "+attributeNode.nodeName);
 					continue;
-				}
 			}
 		}
 		return xmlDocNode;
@@ -471,10 +468,10 @@
 	 * Update part of document, receive load as well as DOMContentLoad
 	 */
 
-	br.addEventListener('load', handleLoad, false);
-	br.addEventListener('DOMContentLoaded', handleLoad, false);
-	br.addEventListener('pageshow', handleLoad, false);
-	br.addEventListener('pagehide', handlePageHide, false);
+	 br.addEventListener('load', handleLoad, false);
+	 br.addEventListener('DOMContentLoaded', handleLoad, false);
+	 br.addEventListener('pageshow', handleLoad, false);
+	 br.addEventListener('pagehide', handlePageHide, false);
 
-	return obj;
+	 return obj;
 }

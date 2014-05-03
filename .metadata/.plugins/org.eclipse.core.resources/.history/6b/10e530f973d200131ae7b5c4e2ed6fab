@@ -174,9 +174,10 @@
 					xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
 				else
 				{
-					log("Invalid attribute name. attribute not copied -> "+attributeNode.nodeName);
+					log("Invalid attribute name. attribute not copied "+attributeNode.nodeName);
 					continue;
 				}
+
 			}
 		}
 		return xmlDocNode;

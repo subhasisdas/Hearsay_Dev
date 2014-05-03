@@ -54,7 +54,7 @@ public class MessageChannel extends Loggable implements IMessageChannel
 
 						if(!message.isEmpty()) 
 						{	// message not read yet
-							log(1, " : Message Receive() works : message :"+message);	
+							log(0, " : Message Receive() works : message :"+message);	
 							listener.onReceive(MessageChannel.this, Message.parseXML(message));
 						}
 					}

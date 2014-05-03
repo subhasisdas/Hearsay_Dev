@@ -16,7 +16,7 @@ var newTabId;
 var tabMap = {};	// map tabId: tab
 var activeTabBrowserHandler = null;
 var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-//variable to valide XML characters chars : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+//variable to validate XML characters chars : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
 var NOT_SAFE_IN_XML_1_0 = /[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/gm;
 var ALPHA_NUMERIC_UNDERSCORE = /^[A-Za-z0-9_]+$/;
 
@@ -73,25 +73,9 @@ function ignoreCheckFunction(/*Node*/ node)
 		log("this node has a defined node name");
 		IsAlphanumericNodeName(node.nodeName);
 	}
-//	if (typeof(node.attributes)){
-//		checkNodeAttributes(node);
-//	}
 
 	return false;
 }
-/*
-function checkNodeAttributes(Node node){
-
-	log("checking node attribute names");
-	for (var i = 0; i < node.attributes.length; i++) 
-	{
-		var attribute = node.attributes[i];
-		if(IsAlphanumericNodeName(attribute.nodeName)){
-			node.removeAttribute(attribute);
-		}
-	}
-
-}*/
 
 function IsAlphanumericNodeName(/*String*/ nodeName){
 
@@ -409,7 +393,7 @@ var listener =
 		onDOMAttrChange: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*String[]*/ values, /*long*/ tabId)
 		{
 			//check for null values of attr, values
-			if(tabId)
+			if(tabId && attr && values)
 			{
 				var updateAttrMessage = hsMessage.create(hsMsgType.UPDATE_ATTR, tabId);
 				updateAttrMessage.setParameter("node_id",node_id);
@@ -421,7 +405,7 @@ var listener =
 		onDOMAttrDelete: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*long*/ tabId)
 		{
 			//check for null values of attr
-			if(tabId)
+			if(tabId && attr)
 			{
 				var deleteAttrMessage = hsMessage.create(hsMsgType.DELETE_ATTR, tabId);
 				deleteAttrMessage.setParameter("node_id",node_id);

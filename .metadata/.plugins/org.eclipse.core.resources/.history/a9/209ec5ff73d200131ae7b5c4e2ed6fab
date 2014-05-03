@@ -177,6 +177,7 @@
 					log("Invalid attribute name. attribute not copied -> "+attributeNode.nodeName);
 					continue;
 				}
+
 			}
 		}
 		return xmlDocNode;

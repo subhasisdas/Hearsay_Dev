@@ -40,6 +40,23 @@ function ignoreCheckFunction(/*Node*/ node)
 	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 		return true;
 
+	/*if(node.nodeName[0].match("#") && !(node.nodeName.match("#text")))
+	{	
+		log("NoDE NAME ]] "+node.nodeName + " :: "+node.nodeName[0]);
+		return true;
+	}*/
+	/*if (node.attributes)
+		for (attribute in node.attributes)
+		{	
+			log("Out Attribute:" +attribute.nodeName);
+			if(attribute.nodeName[0].match("#"))
+			{	
+				log("In Attribute:" +attribute.nodeName);
+
+				//return true;
+			}
+		}*/
+
 	if(node.nodeType == 8)	// comment node
 		return true;
 
@@ -52,21 +69,48 @@ function ignoreCheckFunction(/*Node*/ node)
 	if(typeof(node) == "undefined")
 		return true;
 
-	log("in ignoreCheckFunction : checking validXML");
-
-	if(IsAlphanumericNodeName(Node))
-		return true;
+	if(typeof(node.nodeName)){
+		log("this node has a defined node name");
+		IsAlphanumericNodeName(node.nodeName);
+	}
+//	if (typeof(node.attributes)){
+//		checkNodeAttributes(node);
+//	}
 
 	return false;
 }
+/*
+function checkNodeAttributes(Node node){
+
+	log("checking node attribute names");
+	for (var i = 0; i < node.attributes.length; i++) 
+	{
+		var attribute = node.attributes[i];
+		if(IsAlphanumericNodeName(attribute.nodeName)){
+			node.removeAttribute(attribute);
+		}
+	}
+
+}*/
+
+function IsAlphanumericNodeName(/*String*/ nodeName){
+
+	if(!nodeName.match(/^[A-Za-z0-9_]+$/))
+	{
+		log("invalid nodename");
+		return true;
+	}
+
+	return false;
+} 
 
 /*function sanitizeStringForXML(theString) {
-	
+
 	return theString.replace(NOT_SAFE_IN_XML_1_0, '');
 }
 
 function removeInvalidCharacters(Node node){
-	
+
 	log("inside removeInvalidCharacters");
 	if (node.attributes) {
 		for (var i = 0; i < node.attributes.length; i++) {
@@ -90,39 +134,6 @@ function removeInvalidCharacters(Node node){
 		}
 	}
 }*/
-
-function IsAlphanumericNodeName(/*Node*/ node){
-
-	log("checking node name");
-	
-	if(node.nodeName){
-		if(!node.nodeName.match(/^[A-Za-z0-9_]+$/))
-			{
-			//node.nodeName = sanitizeStringForXML(node.nodeName);
-			//non alphanumeric character present, Discard
-			log("invalid nodename")
-			return true;
-			}
-		
-		if (node.attributes) {
-			log("checking node attribute names");
-			for (var i = 0; i < node.attributes.length; i++) {
-				var attribute = node.attributes[i];
-				if (!attribute.nodeName.match(/^[A-Za-z0-9_]+$/)) {
-					//attribute.nodeName = sanitizeStringForXML(attribute.nodeName);
-					log("invalid attribute");
-					return true;
-					
-				}
-			}
-			log("checking node attribute names done");
-		}
-		/*{
-			//removeInvalidCharacters(node);
-		}*/	
-	}	
-	return false;
-} 
 
 function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
 {
@@ -266,13 +277,21 @@ var listener =
 		},
 		onReceive:		/*void*/function(/*hsTransport*/ handle, /*String*/message) 
 		{
+			//log("CDATA message received from server =>" + message);
 			var msg = hsMessage.load(message);
 			//log("Listener onReceive msg="+message);
 			switch(msg.getType())
 			{
 			case hsMsgType.TTS_SPEAK:
-				log("Receive TTS_SPEAK message : " + message);
+				//log("Receive TTS_SPEAK message : " + message);
 				var text = msg.getParameter("text");
+				log("CDATA text =>"+text);
+				//var temp = text;
+				//,<![CDATA[Home]]>,
+				//var temp1 = temp.toString();
+				//temp1.replace(/\<\!\[CDATA\[(.+\]{0}\>{0})\]\]\>/g,"");
+				//log("CDATA clean text =>"+temp1);
+				
 				var text_id = msg.getParameter("text_id");				
 				text = text && text.length>0 && text[1];				
 				if(text)
@@ -314,11 +333,11 @@ var listener =
 		{
 
 			// TODO: send hsMsgType.KEY message
-			log(" onKeyPress message sent!"+ key);
+			//log(" onKeyPress message sent!"+ key);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 			if(activeTabId)
 			{
-				log(" onKeyPress message sent!");
+				//log(" onKeyPress message sent!");
 				if(key && key.length>0)	
 				{
 					var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
@@ -332,7 +351,7 @@ var listener =
 
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
-			log(" onClick message sent!"+ button);
+			//log(" onClick message sent!"+ button);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 
 			var nodeId = activeTabBrowserHandler.getNodeId(clicked_node);
@@ -389,6 +408,7 @@ var listener =
 		},
 		onDOMAttrChange: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*String[]*/ values, /*long*/ tabId)
 		{
+			//check for null values of attr, values
 			if(tabId)
 			{
 				var updateAttrMessage = hsMessage.create(hsMsgType.UPDATE_ATTR, tabId);
@@ -400,6 +420,7 @@ var listener =
 		},
 		onDOMAttrDelete: /*void*/function(/*hsBrowserHandler*/ handler, /*String[]*/ node_id, /*String[]*/ attr, /*long*/ tabId)
 		{
+			//check for null values of attr
 			if(tabId)
 			{
 				var deleteAttrMessage = hsMessage.create(hsMsgType.DELETE_ATTR, tabId);
