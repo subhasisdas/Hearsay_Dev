@@ -169,7 +169,23 @@
 			{
 				var attributeNode = htmlDocNode.attributes[x];
 
-				//put attribute check here
+				log("Print the attr ->"+attributeNode.value);
+
+				//checks if an element node
+				//check if css is there
+				/*if(attributeNode.getAttribute("style"))
+					{
+						log("Gotcha!");
+						var attributeToBeRemoved = attributeNode.getAttribute("style");
+						if(attributeToBeRemoved.value.search("text/css") != -1)
+							{
+							log("css found"+attributeToBeRemoved.value);
+							}
+					}
+					log("Element node found in copyAttributes");
+				 */
+
+				//put attribute name check here
 				if(attributeNode.nodeName.match(/^[A-Za-z0-9_]+$/))	
 					xmlDocNode.setAttribute(attributeNode.nodeName,attributeNode.nodeValue);
 				else
@@ -205,10 +221,13 @@
 				{
 					var newTextElement = xmlDocument.createElement("textelement");
 					newTextElement.setAttribute("node_id" , internalNodeId);
+
+					//old code to send text node
 					//var newtextNode = xmlDocument.createTextNode(documentRootNode.nodeValue);
 					//newTextElement.appendChild(newtextNode);
-					var newCDataNode = xmlDocument.createCDATASection(documentRootNode.nodeValue);
 
+					//send CDATA node instead
+					var newCDataNode = xmlDocument.createCDATASection(documentRootNode.nodeValue);
 					newTextElement.appendChild(newCDataNode);
 
 					log("hs_browserhandler CDATA : ]]" + (new XMLSerializer().serializeToString(newTextElement)));

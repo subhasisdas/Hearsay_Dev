@@ -40,22 +40,23 @@ function ignoreCheckFunction(/*Node*/ node)
 	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 		return true;
 
-	/*if(node.nodeName[0].match("#") && !(node.nodeName.match("#text")))
-	{	
-		log("NoDE NAME ]] "+node.nodeName + " :: "+node.nodeName[0]);
-		return true;
-	}*/
-	/*if (node.attributes)
-		for (attribute in node.attributes)
-		{	
-			log("Out Attribute:" +attribute.nodeName);
-			if(attribute.nodeName[0].match("#"))
-			{	
-				log("In Attribute:" +attribute.nodeName);
+	//to filter out style
+	// check if element node
+	/*if(node.nodeType == 1){
 
-				//return true;
-			}
-		}*/
+		//var elem = (Element)node;
+		if(node.getAttribute('style'))
+		{
+			log("Gotcha!");
+			//log(node.getAttribute('style'));
+			node.get
+		}
+	}*/
+	if(node.nodeName == "STYLE" || node.nodeName == "#comment" || node.nodeName == "NOSCRIPT" || node.nodeName == "META" || node.nodeName == "style") 
+	{
+		log("Hey there! removing style node");
+		return true;
+	}
 
 	if(node.nodeType == 8)	// comment node
 		return true;
@@ -275,7 +276,7 @@ var listener =
 				//var temp1 = temp.toString();
 				//temp1.replace(/\<\!\[CDATA\[(.+\]{0}\>{0})\]\]\>/g,"");
 				//log("CDATA clean text =>"+temp1);
-				
+
 				var text_id = msg.getParameter("text_id");				
 				text = text && text.length>0 && text[1];				
 				if(text)

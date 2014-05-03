@@ -109,6 +109,8 @@ var hsMessage = (function()
 			catch(e)
 			{
 				log("ERROR OBSERVED : " + e);
+				log(e.stack);
+				e.stack;
 			}
 			return messageReference;
 		}

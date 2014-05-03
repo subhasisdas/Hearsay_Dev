@@ -13,16 +13,16 @@
 		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="document" key="selection"/>
+		<item value="copyAttributes" key="selection"/>
 		<list key="findhistory">
+			<item value="copyAttributes"/>
+			<item value="copy"/>
+			<item value="log"/>
 			<item value="document"/>
 			<item value="cDatanodeValueToSend"/>
 			<item value="speak"/>
 			<item value="cdata"/>
 			<item value="style"/>
-			<item value="stylesheet"/>
-			<item value="sdas"/>
-			<item value="cleanInValidXMLCharacters"/>
 		</list>
 		<list key="replacehistory">
 		</list>
