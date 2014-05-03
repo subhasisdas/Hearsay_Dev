@@ -133,7 +133,9 @@ public class TabHandler extends Loggable implements ITabHandler
 				{
 					iterator.next();
 				}
-				DeleteSubTree(document.getFirstChild(), listNodes.get(i));				
+				nodeMap.remove(listNodes.get(i));
+				/* Removed the recursion in the code as all the node ids are being passed by the extensions */
+				//DeleteSubTree(document.getFirstChild(), listNodes.get(i));				
 			}
 		}
 	}
@@ -174,6 +176,8 @@ public class TabHandler extends Loggable implements ITabHandler
 		return null; //return null if node not found
 	}
 
+	/* Recursive delete not required as all the deleted node ids are being passed by the extensions */
+	/*
 	public void DeleteSubTree(Node root,Integer node_id)
 	{
 		Node nodeToBeDeleted = nodeMap.get(node_id);//getNodebyID(root,node_id);		
@@ -183,6 +187,7 @@ public class TabHandler extends Loggable implements ITabHandler
 			updateDeleteNodeMap((Element)root);
 		}				
 	}
+	*/
 
 	private void updateDeleteNodeMap(Element element)
 	{
@@ -370,6 +375,21 @@ public class TabHandler extends Loggable implements ITabHandler
 		case CHANGE_VALUE:
 			// TODO: update Docunent. if iterator points to this input element,
 			// re-read its value.
+			
+			int changeNodeID = Integer.parseInt(msg.getArguments().get("node_id").get(0));
+			//System.out.println("------------NODE ID:"+changeNodeID);
+			String changeNodeValue = msg.getArguments().get("value").get(0);
+			//System.out.println("--------------VALUE\n\n"+changeNodeValue);
+			if(getNodeId(iterator.getPos())==changeNodeID)
+				iterator.prev();
+			Node changeNode = nodeMap.get(changeNodeID);
+			changeNode.setNodeValue(changeNodeValue);
+			//Element r = (Element)changeNode;
+			//r.setAttribute("value", changeNodeValue);
+			//changeNode.setTextContent(changeNodeValue);
+			//System.out.println("======="+changeNode.getTextContent());
+			System.out.println("nodemap size in change value:"+nodeMap.size());
+			
 			break;
 		case TTS_DONE:
 			processTTSDone(msg);
