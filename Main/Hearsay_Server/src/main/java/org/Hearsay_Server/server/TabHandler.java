@@ -325,13 +325,11 @@ public class TabHandler extends Loggable implements ITabHandler
 		case UPDATE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
 			// if it is, then update iterator
-			if(document != null){
 			Node updateTree = msg.payload;
 			//NOTE TO ASK : Types have been kept as String bcoz sometimes siblindID = ""; parseInt will fail in valid cases causing exception
 			String parentID = msg.getArguments().get("parent_id").get(0);
 			String siblingID = msg.getArguments().get("sibling_id").get(0);	    	
 			process_Dom_Update(updateTree,parentID,siblingID);
-			}
 			break;
 		case DELETE_DOM:
 			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
@@ -349,18 +347,15 @@ public class TabHandler extends Loggable implements ITabHandler
 			break;
 		case UPDATE_ATTR:
 			// TODO: update Document.
-			if(document != null){
 			List<String> nodeIdsString = msg.getArguments().get("node_id");
 			List<String> attr = msg.getArguments().get("attr");
 			List<String> values = msg.getArguments().get("values");
 			List<Integer> nodeIds = convertToIntegerList(nodeIdsString);
 
 			process_Update_Attr(nodeIds,attr,values);
-			}
 			break;
 		case DELETE_ATTR:
 			// TODO: update Docunent.
-			if(document != null){
 			List<String> nodeIdsStri = msg.getArguments().get("node_id");
 			List<String> Attr = msg.getArguments().get("attr");
 			List<Integer> nodeInt = convertToIntegerList(nodeIdsStri);
@@ -370,7 +365,6 @@ public class TabHandler extends Loggable implements ITabHandler
 				current.removeAttribute(Attr.get(i));			
 			}
 			//process_Delete_Attr(msg);
-			}
 			break;
 		case CHANGE_VALUE:
 			// TODO: update Docunent. if iterator points to this input element,
