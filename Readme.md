@@ -45,4 +45,5 @@ Readme for Maven
 	mvn package
 
 	// to check locally if the maven build generated the correct runnable jar
+	
 	java -cp Hearsay_Server\target\Hearsay_Version1-jar-with-dependencies.jar org.Hearsay_Server.server.Hearsay_Main
