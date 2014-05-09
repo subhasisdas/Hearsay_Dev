@@ -616,8 +616,7 @@ public class TabHandler extends Loggable implements ITabHandler
 		String keyPressed = msg.getArguments().get("press").get(0);
 		log(1,"Key Pressed now"+ keyPressed);
 		{
-			//if(keyPressed.equals("keyPressed Insert"))
-			if(keyPressed.equals("keyPressed ShiftUp"))
+			if(keyPressed.equals("keyPressed Insert"))
 			{
 				if(pauseMode)
 				{
@@ -625,6 +624,12 @@ public class TabHandler extends Loggable implements ITabHandler
 					nodeValueToSend = iterator.getPos().getTextContent();
 					if(iterator.getPos() != null)
 						node_Id = getNodeId(iterator.getPos());
+					/*	if(nodeValueToSend != null)
+						{
+							log(1,"Speaking!");
+							speak(nodeValueToSend);
+							hightLight(0); 
+						}*/
 				}
 				else
 				{

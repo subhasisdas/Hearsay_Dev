@@ -625,6 +625,12 @@ public class TabHandler extends Loggable implements ITabHandler
 					nodeValueToSend = iterator.getPos().getTextContent();
 					if(iterator.getPos() != null)
 						node_Id = getNodeId(iterator.getPos());
+					/*	if(nodeValueToSend != null)
+						{
+							log(1,"Speaking!");
+							speak(nodeValueToSend);
+							hightLight(0); 
+						}*/
 				}
 				else
 				{
